@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -84,17 +85,39 @@ public class MainActivity extends AppCompatActivity {
     // ==============================
     // READ USAGE DATA
     // ==============================
-
-    private String getAppName(String packageName) {
-        try
-        {
-            ApplicationInfo appInfo = getPackageManager().getApplicationInfo(getPackageName(), 0);
-            return getPackageManager().getApplicationLabel(appInfo).toString();
-        }
-        catch (PackageManager.NameNotFoundException e) {
-            return "";
+    String myPackageName = getPackageName();
+    private boolean isUserApp(String packageName) {
+        try {
+            ApplicationInfo appInfo =
+                    getPackageManager().getApplicationInfo(packageName, 0);
+            return (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
+        } catch (Exception e) {
+            return false;
         }
     }
+
+    // 🔥 ADD STEP 1 METHOD HERE 👇
+    private boolean isLaunchableApp(String packageName) {
+        Intent intent =
+                getPackageManager().getLaunchIntentForPackage(packageName);
+        return intent != null;
+    }
+
+
+    private String getAppName(String packageName) {
+        try {
+            ApplicationInfo appInfo =
+                    getPackageManager().getApplicationInfo(packageName, 0);
+
+            return getPackageManager()
+                    .getApplicationLabel(appInfo)
+                    .toString();
+
+        } catch (PackageManager.NameNotFoundException e) {
+            return "Unknown App";
+        }
+    }
+
     private void readUsageData() {
 
         UsageStatsManager usageStatsManager =
@@ -129,12 +152,16 @@ public class MainActivity extends AppCompatActivity {
         long totalUsageTime = 0;
         int appOpenCount = 0;
 
+
         String mostUsedApp = "";
         long maxAppTime = 0;
 
         for (UsageStats usage : stats) {
             long time = usage.getTotalTimeInForeground();
-
+            String pkg=usage.getPackageName();
+            if (pkg.equals(myPackageName)) {
+                continue;
+            }
             if (time > 0) {
                 totalUsageTime += time;
                 appOpenCount++;

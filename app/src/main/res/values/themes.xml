@@ -6,4 +6,5 @@
     </style>
 
     <style name="Theme.PhoneMoodTranslator" parent="Base.Theme.PhoneMoodTranslator" />
+
 </resources>

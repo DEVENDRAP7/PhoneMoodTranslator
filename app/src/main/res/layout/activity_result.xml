@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="@drawable/bg_gradient">
+
+    <!-- Emoji -->
+    <TextView
+        android:id="@+id/tvEmoji"
+        android:text="🧘"
+        android:textSize="72sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <!-- Mood Title -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:text="Calm and Grounded"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <!-- Description -->
+    <TextView
+        android:id="@+id/tvDescription"
+        android:text="Your phone usage stayed balanced today. A steady rhythm suggests inner calm."
+        android:textSize="15sp"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <!-- Usage Details -->
+    <TextView
+        android:id="@+id/tvUsageDetails"
+        android:layout_marginTop="24dp"
+        android:textSize="14sp"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/barChart"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:id="@+id/tvReflection"
+        android:layout_marginTop="20dp"
+        android:textSize="15sp"
+        android:textColor="#FFFF"
+        android:gravity="center"
+        android:textStyle="italic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+
+    <!-- Button -->
+    <Button
+        android:id="@+id/btnDone"
+        android:text="Done"
+        android:backgroundTint="#d90429"
+        android:layout_marginTop="32dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

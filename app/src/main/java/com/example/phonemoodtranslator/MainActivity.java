@@ -6,6 +6,8 @@ import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -84,13 +86,13 @@ public class MainActivity extends AppCompatActivity {
     // ==============================
 
     private String getAppName(String packageName) {
-        try {
-            return getPackageManager()
-                    .getApplicationLabel(
-                            getPackageManager().getApplicationInfo(packageName, 0)
-                    ).toString();
-        } catch (Exception e) {
-            return "Instagram";
+        try
+        {
+            ApplicationInfo appInfo = getPackageManager().getApplicationInfo(getPackageName(), 0);
+            return getPackageManager().getApplicationLabel(appInfo).toString();
+        }
+        catch (PackageManager.NameNotFoundException e) {
+            return "";
         }
     }
     private void readUsageData() {

@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
     // ==============================
     // READ USAGE DATA
     // ==============================
-    String myPackageName = getPackageName();
+
     private boolean isUserApp(String packageName) {
         try {
             ApplicationInfo appInfo =
@@ -158,6 +158,8 @@ public class MainActivity extends AppCompatActivity {
 
         for (UsageStats usage : stats) {
             long time = usage.getTotalTimeInForeground();
+            String myPackageName = getPackageName();
+
             String pkg=usage.getPackageName();
             if (pkg.equals(myPackageName)) {
                 continue;

@@ -15,7 +15,7 @@ public class DisclaimerActivity extends AppCompatActivity {
         Button btnAgree = findViewById(R.id.btnAgree);
 
         btnAgree.setOnClickListener(v -> {
-            Intent intent = new Intent(this, MainActivity.class);
+            Intent intent = new Intent(DisclaimerActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
         });

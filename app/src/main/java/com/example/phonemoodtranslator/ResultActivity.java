@@ -72,7 +72,14 @@ public class ResultActivity extends AppCompatActivity {
                 topAppName != null ? topAppName : "Top App"
         };
 
-        BarDataSet dataSet = new BarDataSet(entries, "");
+        BarDataSet dataSet = new BarDataSet(entries, "Usage");
+        dataSet.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value);
+            }
+        });
+
         dataSet.setColors(getRandomBarColors(entries.size()));
         dataSet.setValueTextColor(Color.WHITE);
         dataSet.setValueTextSize(12f);

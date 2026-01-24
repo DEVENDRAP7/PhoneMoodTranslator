@@ -1,4 +1,4 @@
-package com.example.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator;
 
 import java.util.Random;
 

@@ -3,14 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.phonemoodtranslator"
-    compileSdk {
-        version = release(36)
-    }
-
+    namespace = "com.devendrap7.phonemoodtranslator"
+    compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.phonemoodtranslator"
-        minSdk = 33
+        applicationId = "com.devendrap7.phonemoodtranslator"
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"

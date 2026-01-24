@@ -1,4 +1,4 @@
-package com.example.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator;
 
 import android.content.Intent;
 import android.content.SharedPreferences;

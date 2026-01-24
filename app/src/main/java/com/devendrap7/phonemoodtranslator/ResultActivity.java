@@ -1,4 +1,4 @@
-package com.example.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -16,7 +16,6 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Random;
 
 public class ResultActivity extends AppCompatActivity {
 

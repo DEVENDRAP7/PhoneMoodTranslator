@@ -1,4 +1,4 @@
-package com.example.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator;
 
 import android.app.AppOpsManager;
 import android.app.usage.UsageStats;
@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 

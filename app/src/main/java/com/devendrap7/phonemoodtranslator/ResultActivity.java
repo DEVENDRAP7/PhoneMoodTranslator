@@ -2,6 +2,7 @@ package com.devendrap7.phonemoodtranslator;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -9,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
@@ -24,7 +26,11 @@ public class ResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
 
-        // ================= UI =================
+        initializeViews();
+    }
+
+    private void initializeViews() {
+        // Get views
         TextView tvEmoji = findViewById(R.id.tvEmoji);
         TextView tvTitle = findViewById(R.id.tvTitle);
         TextView tvDescription = findViewById(R.id.tvDescription);
@@ -33,45 +39,99 @@ public class ResultActivity extends AppCompatActivity {
         Button btnDone = findViewById(R.id.btnDone);
         BarChart barChart = findViewById(R.id.barChart);
 
-        // ================= DATA =================
+        // Get data from intent
         String emoji = getIntent().getStringExtra("emoji");
         String title = getIntent().getStringExtra("title");
         String description = getIntent().getStringExtra("description");
-
         int usageMinutes = getIntent().getIntExtra("usageMinutes", 0);
         int appOpens = getIntent().getIntExtra("appOpens", 0);
-
         String topAppName = getIntent().getStringExtra("topAppName");
         int topAppMinutes = getIntent().getIntExtra("topAppMinutes", 0);
+        boolean lateNight = getIntent().getBooleanExtra("lateNight", false);
 
-        // ================= SET TEXT =================
-        tvEmoji.setText(emoji != null ? emoji : "📱");
-        tvTitle.setText(title != null ? title : "Your Mood");
-        tvDescription.setText(description != null ? description : "");
+        // Set text with animations
+        setTextWithAnimation(tvEmoji, emoji != null ? emoji : "📱");
+        setTextWithAnimation(tvTitle, title != null ? title : "Your Mood");
+        setTextWithAnimation(tvDescription, description != null ? description : "");
 
-        tvUsageDetails.setText(
-                "📊 Today’s Phone Usage\n\n" +
-                        "⏱ Total time: " + usageMinutes + " minutes\n" +
-                        "📱 Apps opened: " + appOpens + "\n" +
-                        "🏆 Most used app: " + topAppName + " (" + topAppMinutes + " min)"
-        );
+        // Format usage details
+        String usageText = formatUsageDetails(usageMinutes, appOpens, topAppName, topAppMinutes, lateNight);
+        setTextWithAnimation(tvUsageDetails, usageText);
 
-        tvReflection.setText(getReflectionLine(title, usageMinutes));
+        // Set reflection
+        String reflection = getReflectionLine(title, usageMinutes, appOpens, lateNight);
+        setTextWithAnimation(tvReflection, reflection);
 
-        // ================= BAR CHART =================
+        // Setup chart
+        setupBarChart(barChart, usageMinutes, appOpens, topAppMinutes, topAppName);
+
+        // Done button
+        btnDone.setOnClickListener(v -> {
+            finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
+    }
+
+    private void setTextWithAnimation(TextView textView, String text) {
+        textView.setText(text);
+        textView.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_in));
+    }
+
+    private String formatUsageDetails(int usageMinutes, int appOpens,
+                                      String topAppName, int topAppMinutes,
+                                      boolean lateNight) {
+        StringBuilder details = new StringBuilder();
+        details.append("📊 Today's Phone Usage\n\n");
+
+        // Format total time
+        if (usageMinutes >= 60) {
+            int hours = usageMinutes / 60;
+            int minutes = usageMinutes % 60;
+            details.append(String.format("⏱ Total time: %dh %dm\n", hours, minutes));
+        } else {
+            details.append(String.format("⏱ Total time: %d minutes\n", usageMinutes));
+        }
+
+        details.append(String.format("📱 Apps opened: %d\n", appOpens));
+
+        // Most used app
+        if (topAppName != null && !topAppName.isEmpty()) {
+            if (topAppMinutes >= 60) {
+                int hours = topAppMinutes / 60;
+                int minutes = topAppMinutes % 60;
+                details.append(String.format("🏆 Most used: %s (%dh %dm)", topAppName, hours, minutes));
+            } else {
+                details.append(String.format("🏆 Most used: %s (%d min)", topAppName, topAppMinutes));
+            }
+        }
+
+        if (lateNight) {
+            details.append("\n🌙 Late night activity detected");
+        }
+
+        return details.toString();
+    }
+
+    private void setupBarChart(BarChart barChart, int usageMinutes, int appOpens,
+                               int topAppMinutes, String topAppName) {
         ArrayList<BarEntry> entries = new ArrayList<>();
 
+        // Add entries - normalize app opens for better visualization
         entries.add(new BarEntry(0f, usageMinutes));
-        entries.add(new BarEntry(1f, appOpens));
+        entries.add(new BarEntry(1f, appOpens * 5)); // Scale for better visualization
         entries.add(new BarEntry(2f, topAppMinutes));
 
         final String[] labels = new String[]{
-                "Usage",
-                "App Opens",
-                topAppName != null ? topAppName : "Top App"
+                "Total (min)",
+                "App Opens (x5)",
+                topAppName != null ? topAppName.substring(0, Math.min(topAppName.length(), 15)) : "Top App"
         };
 
-        BarDataSet dataSet = new BarDataSet(entries, "Usage");
+        // Create dataset
+        BarDataSet dataSet = new BarDataSet(entries, "");
+        dataSet.setColors(getBarColors());
+        dataSet.setValueTextColor(Color.WHITE);
+        dataSet.setValueTextSize(14f);
         dataSet.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
@@ -79,114 +139,89 @@ public class ResultActivity extends AppCompatActivity {
             }
         });
 
-        dataSet.setColors(getRandomBarColors(entries.size()));
-        dataSet.setValueTextColor(Color.WHITE);
-        dataSet.setValueTextSize(12f);
-
         BarData barData = new BarData(dataSet);
-        barData.setBarWidth(0.6f);
-
+        barData.setBarWidth(0.7f);
         barChart.setData(barData);
 
-        // X-axis labels
-        barChart.getXAxis().setValueFormatter(new ValueFormatter() {
+        // Configure X-axis
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
                 int index = (int) value;
                 return index >= 0 && index < labels.length ? labels[index] : "";
             }
         });
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1f);
+        xAxis.setTextColor(Color.WHITE);
+        xAxis.setTextSize(11f);
+        xAxis.setDrawGridLines(false);
 
-        // ================= CLEAN CHART STYLE =================
+        // Disable axes
         barChart.getAxisLeft().setEnabled(false);
         barChart.getAxisRight().setEnabled(false);
-        barChart.getXAxis().setEnabled(false);
-
         barChart.getLegend().setEnabled(false);
         barChart.setDrawBorders(false);
+        barChart.setDrawGridBackground(false);
 
+        // Description
         Description desc = new Description();
         desc.setText("");
         barChart.setDescription(desc);
 
-        barChart.animateY(700);
-        barChart.invalidate();
+        // Touch and zoom
+        barChart.setTouchEnabled(true);
+        barChart.setDragEnabled(false);
+        barChart.setScaleEnabled(false);
+        barChart.setPinchZoom(false);
 
-        // ================= DONE =================
-        btnDone.setOnClickListener(v -> finish());
+        // Animate
+        barChart.animateY(1000);
+        barChart.invalidate();
     }
 
-    // ================= REFLECTION =================
-    private String getReflectionLine(String moodTitle, int usageMinutes) {
+    private ArrayList<Integer> getBarColors() {
+        ArrayList<Integer> colors = new ArrayList<>();
+        colors.add(Color.parseColor("#60A5FA")); // Blue - total usage
+        colors.add(Color.parseColor("#34D399")); // Green - app opens
+        colors.add(Color.parseColor("#FBBF24")); // Amber - top app
+        return colors;
+    }
 
-        if ("Hyperfocused".equals(moodTitle)) {
-            return "Your attention stayed with one thing longer than usual.";
+    private String getReflectionLine(String moodTitle, int usageMinutes,
+                                     int appOpens, boolean lateNight) {
+        if (moodTitle == null) {
+            return "Take a moment to reflect on your digital habits.";
         }
 
-        if ("Late-Night Thinker".equals(moodTitle)) {
-            return "Some thoughts chose the night instead of rest.";
+        switch (moodTitle) {
+            case "Hyperfocused":
+                return "Your attention stayed with one thing longer than usual.";
+
+            case "Late-Night Thinker":
+                return "Some thoughts chose the night instead of rest.";
+
+            case "Restless Energy":
+                return "Today felt full, but not always settled.";
+
+            case "Distracted Mind":
+                return "Your attention moved faster than your intentions.";
+
+            case "Unplugged":
+                return "A day lived beyond the screen. Balance found.";
+
+            case "Calm & Grounded":
+                return "Nothing extreme today. And that's a kind of balance.";
         }
 
-        if ("Restless Energy".equals(moodTitle)) {
-            return "Today felt full, but not always settled.";
-        }
-
-        if ("Distracted Mind".equals(moodTitle)) {
-            return "Your attention moved faster than your intentions.";
-        }
-
+        // Fallback based on usage
         if (usageMinutes > 360) {
             return "This was a heavy day — not necessarily a bad one.";
+        } else if (usageMinutes < 60) {
+            return "A quiet digital day. Sometimes less is more.";
         }
 
-        return "Nothing extreme today. And that’s a kind of balance.";
-    }
-    private ArrayList<Integer> getColorPool() {
-        ArrayList<Integer> pool = new ArrayList<>();
-
-        // Calm / Premium colors
-        pool.add(Color.parseColor("#60A5FA")); // soft blue
-        pool.add(Color.parseColor("#34D399")); // mint green
-        pool.add(Color.parseColor("#FBBF24")); // amber
-        pool.add(Color.parseColor("#818CF8")); // indigo
-        pool.add(Color.parseColor("#2DD4BF")); // teal
-        pool.add(Color.parseColor("#A78BFA")); // violet
-        pool.add(Color.parseColor("#86EFAC")); // soft green
-        pool.add(Color.parseColor("#FDBA74")); // warm orange
-        pool.add(Color.parseColor("#38BDF8")); // sky blue
-        pool.add(Color.parseColor("#06B6D4")); // cyan
-        pool.add(Color.parseColor("#60A5FA")); // Usage time (blue)
-        pool.add(Color.parseColor("#34D399")); // App opens (green)
-        pool.add(Color.parseColor("#FBBF24")); // Late night (amber)
-        pool.add(Color.parseColor("#7C3AED")); // Deep purple
-        pool.add(Color.parseColor("#06B6D4")); // Cyan
-        pool.add(Color.parseColor("#F59E0B")); // Gold
-        pool.add(Color.parseColor("#93C5FD")); // Light blue
-        pool.add(Color.parseColor("#60A5FA")); // Medium blue
-        pool.add(Color.parseColor("#2563EB")); // Deep blue
-        pool.add(Color.parseColor("#38BDF8")); // Sky blue
-        pool.add(Color.parseColor("#4ADE80")); // Emerald
-        pool.add(Color.parseColor("#FACC15")); // Yellow
-        pool.add(Color.parseColor("#A78BFA")); // Soft violet
-        pool.add(Color.parseColor("#86EFAC")); // Soft green
-        pool.add(Color.parseColor("#FDBA74")); // Warm orange
-        pool.add(Color.parseColor("#818CF8")); // Indigo – thinking
-        pool.add(Color.parseColor("#2DD4BF")); // Teal – engagement
-        pool.add(Color.parseColor("#F472B6"));
-
-        return pool;
-    }
-    private ArrayList<Integer> getRandomBarColors(int count) {
-
-        ArrayList<Integer> pool = getColorPool();
-        ArrayList<Integer> selected = new ArrayList<>();
-
-        Collections.shuffle(pool);
-
-        for (int i = 0; i < count && i < pool.size(); i++) {
-            selected.add(pool.get(i));
-        }
-
-        return selected;
+        return "Every day is a new pattern. Tomorrow might look different.";
     }
 }

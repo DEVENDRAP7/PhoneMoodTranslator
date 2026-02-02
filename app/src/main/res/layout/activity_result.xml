@@ -6,18 +6,19 @@
     android:gravity="center"
     android:padding="24dp"
     android:orientation="vertical"
-    android:background="@drawable/bg_gradient">
+    android:background="@drawable/bg_gradient"
+    android:id="@+id/rootLayout">
 
-    <!-- Emoji -->
     <TextView
         android:id="@+id/tvEmoji"
         android:text="🧘"
         android:gravity="center"
         android:textSize="72sp"
+        android:clickable="true"
+        android:focusable="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <!-- Mood Title -->
     <TextView
         android:id="@+id/tvTitle"
         android:text="Calm and Grounded"
@@ -25,21 +26,43 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
+        android:clickable="true"
+        android:focusable="true"
         android:layout_marginTop="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <!-- Description -->
     <TextView
         android:id="@+id/tvDescription"
-        android:text="Your phone usage stayed balanced today. A steady rhythm suggests inner calm."
+        android:text="Your phone usage stayed balanced today."
         android:textSize="15sp"
         android:textColor="#FFFFFF"
         android:gravity="center"
         android:layout_marginTop="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-    <!-- Usage Details -->
+
+    <TextView
+        android:id="@+id/tvMoodCriteria"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Criteria Explanation..."
+        android:textSize="16sp"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:background="#20FFFFFF"
+        android:padding="24dp"
+        android:layout_marginTop="24dp"
+        android:lineSpacingExtra="6dp"
+        android:visibility="gone" />
+     <com.devendrap7.phonemoodtranslator.MoodPetView
+        android:id="@+id/moodPet"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
     <TextView
         android:id="@+id/tvUsageDetails"
         android:layout_marginTop="24dp"
@@ -48,6 +71,7 @@
         android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/barChart"
         android:layout_width="match_parent"
@@ -58,14 +82,12 @@
         android:id="@+id/tvReflection"
         android:layout_marginTop="20dp"
         android:textSize="15sp"
-        android:textColor="#FFFF"
+        android:textColor="#FFFFFF"
         android:gravity="center"
         android:textStyle="italic"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-
-    <!-- Button -->
     <Button
         android:id="@+id/btnDone"
         android:text="Done"
@@ -73,4 +95,5 @@
         android:layout_marginTop="32dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
 </LinearLayout>

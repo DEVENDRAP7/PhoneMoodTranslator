@@ -1,51 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:background="@drawable/bg_gradient"
-    android:padding="24dp">
+    android:padding="24dp"
+    tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/tvEmoji"
-        android:text="📱"
-        android:textSize="64sp"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tvEmoji"
+            android:text="📱"
+            android:textSize="64sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Phone Mood Translator"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Discover your digital personality"
+            android:textSize="16sp"
+            android:alpha="0.8"
+            android:gravity="center"
+            android:layout_marginBottom="48dp" />
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Translate My Mood"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#673AB7"
+            android:backgroundTint="#FFFFFF"
+            app:cornerRadius="12dp" />
+
+        <Button
+            android:id="@+id/btnHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="View History"
+            android:textSize="16sp"
+            android:textColor="#673AB7"
+            android:backgroundTint="#FFFFFF"
+            app:cornerRadius="12dp" />
+
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabColorPicker"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <TextView
-        android:text="Phone Mood Translator"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="16dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_menu_edit"
+        android:backgroundTint="#FFFFFF"
+        app:tint="#000000"
+        android:contentDescription="Change Background Color" />
+    <LinearLayout
+        android:id="@+id/layoutSwipeHint"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <TextView
-        android:text="We translate your phone usage into a mood.\nJust for fun."
-        android:textSize="14sp"
-        android:textColor="#CBD5E1"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:gravity="center"
-        android:layout_marginTop="12dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
+        android:alpha="0.7">
 
-    <Button
-        android:id="@+id/btnStart"
-        android:text="Translate My Mood"
-        android:layout_marginTop="32dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#d90429"/>
-    <Button
-        android:id="@+id/btnHistory"
-        android:text="View Mood History"
-        android:layout_marginTop="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#d90429"/>
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/arrow_up_float"
+            app:tint="?android:attr/textColorPrimary" />
 
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Swipe Up to check out Moods"
+            android:textSize="12sp"
+            android:textColor="?android:attr/textColorPrimary"/>
+    </LinearLayout>
+
+</RelativeLayout>

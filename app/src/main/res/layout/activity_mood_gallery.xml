@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/galleryRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#4A148C">
+
+    <TextView
+        android:id="@+id/tvHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="All Moods"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:alpha="0.7"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="48dp"/>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/moodPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/tvHeader"
+        android:layout_above="@id/btnClose"
+        android:layout_marginVertical="32dp"
+        android:paddingHorizontal="40dp"
+        android:clipToPadding="false"
+        android:clipChildren="false"/>
+
+    <TextView
+        android:id="@+id/btnClose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="▼ Swipe Down to Close"
+        android:textColor="#FFFFFF"
+        android:alpha="0.6"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"/>
+
+</RelativeLayout>

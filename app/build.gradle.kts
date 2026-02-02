@@ -40,7 +40,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
-
-
-
+    implementation("com.github.yukuku:ambilwarna:2.0.1")
 }

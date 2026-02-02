@@ -1,34 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/historyRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:background="@drawable/bg_gradient">
+    android:padding="24dp">
 
     <TextView
+        android:id="@+id/tvPageTitle"
         android:layout_gravity="center"
         android:text="Mood History"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
         android:layout_marginTop="15dp"
         android:layout_marginBottom="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-
-    <TextView
-        android:id="@+id/tvHistory"
-        android:textColor="#CBD5E1"
-        android:textSize="15sp"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/llHistoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="20dp"/>
+    </ScrollView>
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/back"
         android:text="Back Home"
-        android:backgroundTint="#d90429"/>
+        android:layout_marginTop="16dp"/>
+
 </LinearLayout>

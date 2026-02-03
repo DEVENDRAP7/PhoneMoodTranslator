@@ -14,7 +14,7 @@ public class MoodPetView extends View {
     private Paint paintFace, paintFeatures, paintEars, paintGlasses;
     private int usageMinutes = 0;
     private int appOpens = 0;
-    private boolean isLateNight = false; // New Trigger
+    private boolean isLateNight = false;
 
     // Geometry Paths
     private Path mouthPath = new Path();
@@ -37,7 +37,7 @@ public class MoodPetView extends View {
         paintFeatures.setStyle(Paint.Style.FILL);
         paintFeatures.setStrokeCap(Paint.Cap.ROUND);
 
-        // New Paint for Glasses
+        // New Paint for Glasses (Professor Mode)
         paintGlasses = new Paint(Paint.ANTI_ALIAS_FLAG);
         paintGlasses.setColor(Color.parseColor("#333333")); // Dark Grey frames
         paintGlasses.setStyle(Paint.Style.STROKE);
@@ -48,40 +48,40 @@ public class MoodPetView extends View {
         this.usageMinutes = minutes;
         this.appOpens = opens;
 
-        // Check for Late Night (Auto-detect if current time is late, or pass it in)
+        // Check for Late Night (11 PM - 5 AM)
         Calendar cal = Calendar.getInstance();
         int hour = cal.get(Calendar.HOUR_OF_DAY);
         this.isLateNight = (hour >= 23 || hour < 5);
 
-        // --- DETERMINE COLOR & MOOD ---
+        // --- UPDATED COLOR LOGIC ---
 
         if (isLateNight) {
-            // MODE: ZOMBIE (Late Night)
-            paintFace.setColor(Color.parseColor("#7E57C2")); // Deep Purple
+            // MODE: ZOMBIE (Purple)
+            paintFace.setColor(Color.parseColor("#7E57C2"));
             paintEars.setColor(Color.parseColor("#512DA8"));
         }
-        else if (minutes > 150 && opens < 15) {
-            // MODE: PROFESSOR (Hyperfocused / Work Mode)
-            paintFace.setColor(Color.parseColor("#42A5F5")); // Intellect Blue
-            paintEars.setColor(Color.parseColor("#1E88E5"));
-        }
-        else if (minutes > 300) {
-            // MODE: OVERDOSE (Sick)
-            paintFace.setColor(Color.parseColor("#EF5350")); // Red
+        else if (minutes > 420) {
+            // MODE: OVERDOSE (Red) -> > 7 hours
+            paintFace.setColor(Color.parseColor("#EF5350"));
             paintEars.setColor(Color.parseColor("#C62828"));
         }
-        else if (opens > 50) {
-            // MODE: ANXIOUS (High Switching)
-            paintFace.setColor(Color.parseColor("#FFCA28")); // Amber
+        else if (minutes > 150 && opens < 15) {
+            // MODE: PROFESSOR (Blue)
+            paintFace.setColor(Color.parseColor("#42A5F5"));
+            paintEars.setColor(Color.parseColor("#1E88E5"));
+        }
+        else if (opens > 30) {
+            // MODE: ANXIOUS (Amber)
+            paintFace.setColor(Color.parseColor("#FFCA28"));
             paintEars.setColor(Color.parseColor("#FF8F00"));
         }
         else {
-            // MODE: HAPPY (Balanced)
-            paintFace.setColor(Color.parseColor("#66BB6A")); // Green
+            // MODE: HAPPY (Green) -> Default
+            paintFace.setColor(Color.parseColor("#66BB6A"));
             paintEars.setColor(Color.parseColor("#2E7D32"));
         }
 
-        invalidate(); // Redraw
+        invalidate(); // Redraw with new data
     }
 
     @Override
@@ -96,14 +96,14 @@ public class MoodPetView extends View {
         drawEars(canvas, cx, cy, radius);
         canvas.drawCircle(cx, cy, radius, paintFace); // Face Base
 
-        // Special: Draw Glasses if in Professor Mode
+        // Draw Glasses if Professor, otherwise normal Eyes
         if (!isLateNight && usageMinutes > 150 && appOpens < 15) {
             drawGlasses(canvas, cx, cy, radius);
         } else {
             drawEyes(canvas, cx, cy, radius);
         }
 
-        // Nose (Always cute)
+        // Nose
         paintFeatures.setColor(Color.BLACK);
         paintFeatures.setStyle(Paint.Style.FILL);
         canvas.drawCircle(cx, cy + radius * 0.1f, radius * 0.15f, paintFeatures);
@@ -116,20 +116,20 @@ public class MoodPetView extends View {
         float eyeY = cy - r * 0.2f;
         float glassRadius = r * 0.25f;
 
-        // 1. Draw White Lenses
+        // Lenses (White background)
         paintFeatures.setColor(Color.WHITE);
         paintFeatures.setStyle(Paint.Style.FILL);
         canvas.drawCircle(cx - eyeOffset, eyeY, glassRadius, paintFeatures);
         canvas.drawCircle(cx + eyeOffset, eyeY, glassRadius, paintFeatures);
 
-        // 2. Draw Frames (Rim)
+        // Frames (Dark Grey Rim)
         canvas.drawCircle(cx - eyeOffset, eyeY, glassRadius, paintGlasses);
         canvas.drawCircle(cx + eyeOffset, eyeY, glassRadius, paintGlasses);
 
-        // 3. Draw Bridge
+        // Bridge
         canvas.drawLine(cx - eyeOffset + glassRadius, eyeY, cx + eyeOffset - glassRadius, eyeY, paintGlasses);
 
-        // 4. Draw Pupils (Small & Smart)
+        // Pupils
         paintFeatures.setColor(Color.BLACK);
         canvas.drawCircle(cx - eyeOffset, eyeY, 8f, paintFeatures);
         canvas.drawCircle(cx + eyeOffset, eyeY, 8f, paintFeatures);
@@ -145,25 +145,27 @@ public class MoodPetView extends View {
 
         if (isLateNight) {
             // SLEEPY EYES: Just two lines (- -)
-            paintFeatures.setColor(Color.parseColor("#311B92")); // Dark Purple Lines
+            paintFeatures.setColor(Color.parseColor("#311B92"));
             paintFeatures.setStrokeWidth(12f);
             canvas.drawLine(cx - eyeOffset - 20, eyeY, cx - eyeOffset + 20, eyeY, paintFeatures);
             canvas.drawLine(cx + eyeOffset - 20, eyeY, cx + eyeOffset + 20, eyeY, paintFeatures);
-            paintFeatures.setStrokeWidth(0f); // Reset
+            paintFeatures.setStrokeWidth(0f);
             return;
         }
 
-        // Standard Eyes Background
+        // Whites of Eyes
         canvas.drawCircle(cx - eyeOffset, eyeY, eyeSize * 2, paintFeatures);
         canvas.drawCircle(cx + eyeOffset, eyeY, eyeSize * 2, paintFeatures);
 
         // Pupils
         paintFeatures.setColor(Color.BLACK);
-        if (usageMinutes > 300) {
-            // TIRED X EYES
+        if (usageMinutes > 420) {
+            // TIRED X EYES (Updated Threshold: 420 mins / 7 hrs)
             paintFeatures.setStrokeWidth(10f);
+            // Left X
             canvas.drawLine(cx - eyeOffset - 15, eyeY - 15, cx - eyeOffset + 15, eyeY + 15, paintFeatures);
             canvas.drawLine(cx - eyeOffset + 15, eyeY - 15, cx - eyeOffset - 15, eyeY + 15, paintFeatures);
+            // Right X
             canvas.drawLine(cx + eyeOffset - 15, eyeY - 15, cx + eyeOffset + 15, eyeY + 15, paintFeatures);
             canvas.drawLine(cx + eyeOffset + 15, eyeY - 15, cx + eyeOffset - 15, eyeY + 15, paintFeatures);
             paintFeatures.setStrokeWidth(0f);
@@ -187,31 +189,37 @@ public class MoodPetView extends View {
             // Sleepy Drool (Small o)
             canvas.drawCircle(cx, mouthY, 15f, paintFeatures);
         }
-        else if (usageMinutes > 300) { // Frown
+        else if (usageMinutes > 420) {
+            // Frown (Updated Threshold: 7 hrs)
             mouthPath.moveTo(cx - mouthW, mouthY + 15);
             mouthPath.quadTo(cx, mouthY - 15, cx + mouthW, mouthY + 15);
         }
-        else if (usageMinutes > 150 && appOpens < 15) { // Smart Smirk (Small line)
+        else if (usageMinutes > 150 && appOpens < 15) {
+            // Smart Smirk (Straight line)
             canvas.drawLine(cx - 20, mouthY, cx + 20, mouthY, paintFeatures);
         }
-        else { // Smile
+        else {
+            // Smile (W shape)
             mouthPath.moveTo(cx - mouthW, mouthY);
             mouthPath.quadTo(cx - mouthW/2, mouthY + 20, cx, mouthY);
             mouthPath.quadTo(cx + mouthW/2, mouthY + 20, cx + mouthW, mouthY);
         }
-        canvas.drawPath(mouthPath, paintFeatures); // Draw the path if used
+        canvas.drawPath(mouthPath, paintFeatures);
         paintFeatures.setStyle(Paint.Style.FILL);
     }
 
-    // ... (Keep drawEars the same) ...
     private void drawEars(Canvas canvas, float cx, float cy, float r) {
         earPath.reset();
+        // Left Ear
         earPath.moveTo(cx - r * 0.8f, cy - r * 0.5f);
         earPath.lineTo(cx - r * 1.4f, cy - r * 1.2f);
         earPath.lineTo(cx - r * 0.2f, cy - r * 0.9f);
+
+        // Right Ear
         earPath.moveTo(cx + r * 0.8f, cy - r * 0.5f);
         earPath.lineTo(cx + r * 1.4f, cy - r * 1.2f);
         earPath.lineTo(cx + r * 0.2f, cy - r * 0.9f);
+
         canvas.drawPath(earPath, paintEars);
     }
 }

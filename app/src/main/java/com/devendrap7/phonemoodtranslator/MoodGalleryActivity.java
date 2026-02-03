@@ -4,81 +4,73 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.viewpager2.widget.CompositePageTransformer;
-import androidx.viewpager2.widget.MarginPageTransformer;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MoodGalleryActivity extends AppCompatActivity {
 
+    private ViewPager2 moodPager;
+    private TextView btnClose;
+    private View rootLayout;
     private GestureDetector gestureDetector;
+    private int themeTextColor; // The adaptive color
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mood_gallery);
 
-        // 1. Theme Logic: Calculate colors first
+        moodPager = findViewById(R.id.moodPager);
+        btnClose = findViewById(R.id.btnClose);
+        rootLayout = findViewById(R.id.galleryRoot);
+
+        // 1. Theme & Contrast Setup
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        int bgColor = prefs.getInt("bg_color", Color.parseColor("#4A148C")); // Default Purple
+        int savedColor = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
 
-        // Smart Contrast: Is the background Dark?
-        boolean isDark = (1 - (0.299 * Color.red(bgColor) + 0.587 * Color.green(bgColor) + 0.114 * Color.blue(bgColor)) / 255) >= 0.5;
-        int textColor = isDark ? Color.WHITE : Color.BLACK;
+        if (rootLayout != null) rootLayout.setBackgroundColor(savedColor);
 
-        // Apply Background & Text Colors to UI
-        findViewById(R.id.galleryRoot).setBackgroundColor(bgColor);
-        ((TextView)findViewById(R.id.tvHeader)).setTextColor(textColor);
-        ((TextView)findViewById(R.id.btnClose)).setTextColor(textColor);
+        // Calculate if background is Dark or Light
+        boolean isDark = (1 - (0.299 * Color.red(savedColor) + 0.587 * Color.green(savedColor) + 0.114 * Color.blue(savedColor)) / 255) >= 0.5;
 
-        // 2. Initialize Gesture Detector (For Swipe Down)
+        // Set Text Color: White for Dark themes, Black for Light themes
+        themeTextColor = isDark ? Color.WHITE : Color.BLACK;
+
+        // Apply color to the "Close" button immediately
+        btnClose.setTextColor(themeTextColor);
+        btnClose.setAlpha(0.6f); // Keep the transparency style
+
+        // 2. Load Data
+        List<MoodItem> allMoods = loadAllMoods();
+
+        // 3. Setup Adapter (PASS THE COLOR HERE)
+        MoodAdapter adapter = new MoodAdapter(allMoods, themeTextColor);
+        moodPager.setAdapter(adapter);
+        moodPager.setPageTransformer(new ZoomOutPageTransformer());
+
+        // 4. Gesture Logic (Swipe Down to Close)
         gestureDetector = new GestureDetector(this, new SwipeDownListener());
-
-        // 3. Setup ViewPager (The Card Carousel)
-        ViewPager2 viewPager = findViewById(R.id.moodPager);
-        List<MoodGalleryAdapter.MoodItem> items = getMoodItems();
-
-        // **CRITICAL:** Pass textColor and isDark flag to Adapter for neat cards
-        viewPager.setAdapter(new MoodGalleryAdapter(items, textColor, isDark));
-
-        // 4. Carousel Animation (Scale & Fade)
-        viewPager.setOffscreenPageLimit(3);
-        viewPager.getChildAt(0).setOverScrollMode(View.OVER_SCROLL_NEVER);
-
-        CompositePageTransformer transformer = new CompositePageTransformer();
-        transformer.addTransformer(new MarginPageTransformer(40)); // Spacing
-        transformer.addTransformer((page, position) -> {
-            float r = 1 - Math.abs(position);
-            page.setScaleY(0.85f + r * 0.15f); // Center card is bigger
-            page.setAlpha(0.5f + r * 0.5f);   // Side cards are faded
-        });
-        viewPager.setPageTransformer(transformer);
-
-        // 5. Close Button (Backup if swipe fails)
-        findViewById(R.id.btnClose).setOnClickListener(v -> finishWithAnimation());
-    }
-
-    // ==========================================
-    // SWIPE DOWN DETECTION
-    // ==========================================
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        // Check for Swipe Down FIRST
-        if (gestureDetector != null) {
-            if (gestureDetector.onTouchEvent(ev)) {
-                return true; // We handled the swipe!
-            }
+        View child = moodPager.getChildAt(0);
+        if (child instanceof RecyclerView) {
+            child.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
         }
-        // Otherwise, let standard touch events happen (like scrolling cards)
-        return super.dispatchTouchEvent(ev);
+
+        // 5. Close Actions
+        btnClose.setOnClickListener(v -> closeGallery());
+        rootLayout.setOnClickListener(v -> closeGallery());
     }
 
-    private void finishWithAnimation() {
+    private void closeGallery() {
         finish();
         overridePendingTransition(R.anim.stay, R.anim.slide_out_down);
     }
@@ -88,51 +80,108 @@ public class MoodGalleryActivity extends AppCompatActivity {
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
         @Override
-        public boolean onDown(MotionEvent e) {
-            return false; // Let the ViewPager capture the initial touch
-        }
+        public boolean onDown(MotionEvent e) { return false; }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             try {
-                if (e1 == null || e2 == null) return false;
-
-                float diffY = e2.getY() - e1.getY(); // Vertical movement
-                float diffX = e2.getX() - e1.getX(); // Horizontal movement
-
-                // Check: Is this a Vertical Swipe? (More Up/Down than Left/Right)
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
                 if (Math.abs(diffY) > Math.abs(diffX)) {
-                    // Check: Is it fast enough and long enough?
                     if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffY > 0) { // Positive Y means DOWN
-                            finishWithAnimation();
-                            return true;
-                        }
+                        if (diffY > 0) { closeGallery(); return true; }
                     }
                 }
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
             return false;
         }
     }
 
-    // ==========================================
-    // DATA GENERATION
-    // ==========================================
-    private List<MoodGalleryAdapter.MoodItem> getMoodItems() {
-        List<MoodGalleryAdapter.MoodItem> items = new ArrayList<>();
-        items.add(new MoodGalleryAdapter.MoodItem("🤯", "Overdose", "> 5 Hours", "System overload. You've lived more online than offline today."));
-        items.add(new MoodGalleryAdapter.MoodItem("🔗", "Tethered", "4 - 5 Hours", "Not quite an overdose, but the phone feels glued to your hand."));
-        items.add(new MoodGalleryAdapter.MoodItem("🔥", "Hyperfocused", "3+ Hrs (Low Switching)", "Deep work defined your day. Long sessions, zero interruptions."));
-        items.add(new MoodGalleryAdapter.MoodItem("🧠", "Restless Energy", "3+ Hrs (High Switching)", "Your mind was running sprints. High usage with constant app switching."));
-        items.add(new MoodGalleryAdapter.MoodItem("😵", "Distracted Mind", "< 2.5 Hrs (Extreme Switching)", "Focus was impossible. A butterfly flitting between apps."));
-        items.add(new MoodGalleryAdapter.MoodItem("🧐", "Serious Mode", "Moderate Usage (Low Switch)", "Usage was purposeful, not random. You meant business today."));
-        items.add(new MoodGalleryAdapter.MoodItem("🎡", "Light-hearted", "Moderate Usage (Avg Switch)", "Just browsing and chatting. Nothing too heavy today."));
-        items.add(new MoodGalleryAdapter.MoodItem("😎", "Slick", "< 1.5 Hours", "In and out. Efficient. You rule the phone, it doesn't rule you."));
-        items.add(new MoodGalleryAdapter.MoodItem("🌙", "Late-Night Thinker", "11 PM - 4 AM", "Sleep was sacrificed for scrolling. A midnight mind wandering."));
-        items.add(new MoodGalleryAdapter.MoodItem("🌿", "Unplugged", "< 30 Mins", "A rare day of digital silence. Real life took priority."));
-        items.add(new MoodGalleryAdapter.MoodItem("🧘", "Calm & Grounded", "< 4 Hours (Balanced)", "A balanced digital rhythm. Neither obsessed nor absent."));
-        return items;
+    private List<MoodItem> loadAllMoods() {
+        List<MoodItem> moods = new ArrayList<>();
+        moods.add(new MoodItem("🤯", "Overdose", "Usage > 7 Hours", "System overload detected. You've lived more online than offline today."));
+        moods.add(new MoodItem("🔗", "Tethered", "Usage 6 - 7 Hours", "The phone feels glued to your hand. Borderline heavy usage pattern."));
+        moods.add(new MoodItem("🌿", "Unplugged", "Usage < 30 Mins", "Real life took priority today. Digital distance felt natural and healthy."));
+        moods.add(new MoodItem("🌙", "Late-Night Thinker", "11 PM - 4 AM Activity", "Sleep was sacrificed for scrolling. A midnight mind wandering through pixels."));
+        moods.add(new MoodItem("🔥", "Hyperfocused", "Usage > 2.5h • Low Unlocks", "Deep work defined your day. Sustained attention on a single task."));
+        moods.add(new MoodItem("🧠", "Restless Energy", "Usage > 2.5h • High Unlocks", "Your mind was running sprints. Constant switching seeking stimulation."));
+        moods.add(new MoodItem("😵", "Distracted Mind", "Low Usage • High Unlocks", "Focus was impossible today. A digital butterfly flitting from app to app."));
+        moods.add(new MoodItem("😎", "Slick", "Usage < 1.5 Hours", "In and out. Efficient. You used the tool, the tool didn't use you."));
+        moods.add(new MoodItem("🧐", "Serious Mode", "Moderate Time • Low Unlocks", "Usage was purposeful. You came for a reason and stayed for it."));
+        moods.add(new MoodItem("🎡", "Light-hearted", "Moderate Time • High Unlocks", "Just browsing, chatting, and wandering. A casual digital stroll."));
+        moods.add(new MoodItem("🧘", "Calm & Grounded", "Balanced Stats", "A perfect digital rhythm. Not too long, not too frantic. Just right."));
+        return moods;
+    }
+
+    static class MoodItem {
+        String emoji, title, criteria, desc;
+        MoodItem(String e, String t, String c, String d) { this.emoji = e; this.title = t; this.criteria = c; this.desc = d; }
+    }
+
+    // --- ADAPTER UPDATED TO ACCEPT COLOR ---
+    class MoodAdapter extends RecyclerView.Adapter<MoodAdapter.MoodViewHolder> {
+        List<MoodItem> list;
+        int textColor; // New Variable
+
+        MoodAdapter(List<MoodItem> list, int textColor) {
+            this.list = list;
+            this.textColor = textColor; // Store the adaptive color
+        }
+
+        @NonNull
+        @Override
+        public MoodViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_mood_card, parent, false);
+            return new MoodViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull MoodViewHolder holder, int position) {
+            MoodItem item = list.get(position);
+            holder.tvEmoji.setText(item.emoji);
+            holder.tvTitle.setText(item.title);
+            holder.tvCriteria.setText(item.criteria);
+            holder.tvDesc.setText(item.desc);
+
+            // --- APPLY THE COLOR ---
+            holder.tvTitle.setTextColor(textColor);
+
+            holder.tvDesc.setTextColor(textColor);
+            holder.tvDesc.setAlpha(0.7f); // 70% opacity for description
+        }
+
+        @Override
+        public int getItemCount() { return list.size(); }
+
+        class MoodViewHolder extends RecyclerView.ViewHolder {
+            TextView tvEmoji, tvTitle, tvCriteria, tvDesc;
+            MoodViewHolder(View v) {
+                super(v);
+                tvEmoji = v.findViewById(R.id.tvCardEmoji);
+                tvTitle = v.findViewById(R.id.tvCardTitle);
+                tvCriteria = v.findViewById(R.id.tvCardCriteria);
+                tvDesc = v.findViewById(R.id.tvCardDesc);
+            }
+        }
+    }
+
+    // --- Transformer (Unchanged) ---
+    public class ZoomOutPageTransformer implements ViewPager2.PageTransformer {
+        private static final float MIN_SCALE = 0.85f;
+        private static final float MIN_ALPHA = 0.5f;
+        public void transformPage(View view, float position) {
+            int pageWidth = view.getWidth();
+            int pageHeight = view.getHeight();
+            if (position < -1) { view.setAlpha(0f); }
+            else if (position <= 1) {
+                float scaleFactor = Math.max(MIN_SCALE, 1 - Math.abs(position));
+                float vertMargin = pageHeight * (1 - scaleFactor) / 2;
+                float horzMargin = pageWidth * (1 - scaleFactor) / 2;
+                if (position < 0) { view.setTranslationX(horzMargin - vertMargin / 2); }
+                else { view.setTranslationX(-horzMargin + vertMargin / 2); }
+                view.setScaleX(scaleFactor); view.setScaleY(scaleFactor);
+                view.setAlpha(MIN_ALPHA + (scaleFactor - MIN_SCALE) / (1 - MIN_SCALE) * (1 - MIN_ALPHA));
+            } else { view.setAlpha(0f); }
+        }
     }
 }

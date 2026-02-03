@@ -6,8 +6,8 @@ import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -16,7 +16,6 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +26,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -38,11 +38,13 @@ public class MainActivity extends AppCompatActivity {
     private Button btnStart, btnHistory;
     private FloatingActionButton fabColorPicker;
     private View rootLayout;
-    private TextView tvTitle, tvSubtitle,tvEmoji;
-    private int mDefaultColor;
 
-    // Gesture Detector for Swipe Up
+    // Added tvSwipeHint here
+    private TextView tvTitle, tvSubtitle, tvEmoji, tvSwipeHint;
+
+    private int mDefaultColor;
     private GestureDetector gestureDetector;
+    private Map<String, String> installedAppsCache = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,19 +53,56 @@ public class MainActivity extends AppCompatActivity {
 
         initializeViews();
         setupTheme();
+        cacheInstalledApps();
         setupClickListeners();
-
-        // Initialize Gesture Detector
         gestureDetector = new GestureDetector(this, new SwipeGestureListener());
     }
 
-    // This method intercepts touch events BEFORE they reach buttons
+    // --- 1. FIND THE VIEW ---
+    private void initializeViews() {
+        btnStart = findViewById(R.id.btnStart);
+        btnHistory = findViewById(R.id.btnHistory);
+        fabColorPicker = findViewById(R.id.fabColorPicker);
+        rootLayout = findViewById(R.id.mainRootLayout);
+        tvTitle = findViewById(R.id.tvTitle);
+        tvSubtitle = findViewById(R.id.tvSubtitle);
+        tvEmoji = findViewById(R.id.tvEmoji);
+
+        // MAKE SURE YOUR XML ID MATCHES THIS (e.g., android:id="@+id/tvSwipeHint")
+        tvSwipeHint = findViewById(R.id.tvSwipeHint);
+    }
+
+    // --- 2. UPDATE THE COLOR ---
+    private void applyTheme(int themeColor) {
+        if (rootLayout != null) rootLayout.setBackgroundColor(themeColor);
+        boolean isDark = isColorDark(themeColor);
+        int contrastColor = isDark ? Color.WHITE : Color.BLACK;
+
+        if (tvTitle != null) tvTitle.setTextColor(contrastColor);
+        if (tvSubtitle != null) tvSubtitle.setTextColor(contrastColor);
+
+        // Adaptive Color for Swipe Text
+        if (tvSwipeHint != null) {
+            tvSwipeHint.setTextColor(contrastColor);
+            tvSwipeHint.setAlpha(0.7f); // Make it slightly transparent (stylish)
+        }
+
+        if (btnStart != null) {
+            btnStart.setBackgroundTintList(ColorStateList.valueOf(contrastColor));
+            btnStart.setTextColor(themeColor);
+        }
+        if (btnHistory != null) {
+            btnHistory.setBackgroundTintList(ColorStateList.valueOf(contrastColor));
+            btnHistory.setTextColor(themeColor);
+        }
+    }
+
+    // ... (The rest of the file remains exactly the same) ...
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (gestureDetector != null) {
-            if (gestureDetector.onTouchEvent(ev)) {
-                return true; // Swipe handled!
-            }
+            if (gestureDetector.onTouchEvent(ev)) { return true; }
         }
         return super.dispatchTouchEvent(ev);
     }
@@ -73,25 +112,16 @@ public class MainActivity extends AppCompatActivity {
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
         @Override
-        public boolean onDown(MotionEvent e) {
-            return false; // Crucial: Return false so buttons can still be clicked
-        }
+        public boolean onDown(MotionEvent e) { return false; }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             try {
                 float diffY = e2.getY() - e1.getY();
-                // Check if vertical swipe > threshold
                 if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffY < 0) {
-                        // Swipe UP detected
-                        onSwipeUp();
-                        return true;
-                    }
+                    if (diffY < 0) { onSwipeUp(); return true; }
                 }
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
+            } catch (Exception exception) { exception.printStackTrace(); }
             return false;
         }
     }
@@ -102,42 +132,10 @@ public class MainActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_in_up, R.anim.stay);
     }
 
-    // ==========================================
-    // EXISTING LOGIC (Unchanged)
-    // ==========================================
-
-    private void initializeViews() {
-        btnStart = findViewById(R.id.btnStart);
-        btnHistory = findViewById(R.id.btnHistory);
-        fabColorPicker = findViewById(R.id.fabColorPicker);
-        rootLayout = findViewById(R.id.mainRootLayout);
-        tvTitle = findViewById(R.id.tvTitle);
-        tvSubtitle = findViewById(R.id.tvSubtitle);
-        tvEmoji=findViewById(R.id.tvEmoji);
-    }
-
     private void setupTheme() {
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         mDefaultColor = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
         applyTheme(mDefaultColor);
-    }
-
-    private void applyTheme(int themeColor) {
-        if (rootLayout != null) rootLayout.setBackgroundColor(themeColor);
-        boolean isDark = isColorDark(themeColor);
-        int contrastColor = isDark ? Color.WHITE : Color.BLACK;
-
-        if (tvTitle != null) tvTitle.setTextColor(contrastColor);
-        if (tvSubtitle != null) tvSubtitle.setTextColor(contrastColor);
-
-        if (btnStart != null) {
-            btnStart.setBackgroundTintList(ColorStateList.valueOf(contrastColor));
-            btnStart.setTextColor(themeColor);
-        }
-        if (btnHistory != null) {
-            btnHistory.setBackgroundTintList(ColorStateList.valueOf(contrastColor));
-            btnHistory.setTextColor(themeColor);
-        }
     }
 
     private boolean isColorDark(int color) {
@@ -170,6 +168,37 @@ public class MainActivity extends AppCompatActivity {
 
     private void saveTheme(int color) {
         getSharedPreferences("app_prefs", MODE_PRIVATE).edit().putInt("bg_color", color).apply();
+    }
+
+    private void cacheInstalledApps() {
+        PackageManager pm = getPackageManager();
+        Intent intent = new Intent(Intent.ACTION_MAIN, null);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> apps = pm.queryIntentActivities(intent, 0);
+        for (ResolveInfo app : apps) {
+            String packageName = app.activityInfo.packageName;
+            String appName = app.loadLabel(pm).toString();
+            installedAppsCache.put(packageName, appName);
+        }
+    }
+
+    private String getAppName(String packageName) {
+        if (installedAppsCache.containsKey(packageName)) { return installedAppsCache.get(packageName); }
+        return formatPackageName(packageName);
+    }
+
+    private String formatPackageName(String packageName) {
+        if (packageName == null) return "Unknown";
+        String[] parts = packageName.split("\\.");
+        String rawName = packageName;
+        if (parts.length > 1) {
+            rawName = parts[1];
+            if ((rawName.equals("google") || rawName.equals("android")) && parts.length > 2) {
+                rawName = parts[2];
+            }
+        }
+        if (rawName.length() > 0) { return rawName.substring(0, 1).toUpperCase() + rawName.substring(1); }
+        return rawName;
     }
 
     private void handleStartButtonClick() {
@@ -245,7 +274,8 @@ public class MainActivity extends AppCompatActivity {
         for (Map.Entry<String, Long> entry : appUsageMap.entrySet()) {
             String pkg = entry.getKey();
             long duration = entry.getValue();
-            if (isAppLaunchable(pkg) && duration > 1000) {
+
+            if ((installedAppsCache.containsKey(pkg) || isAppLaunchable(pkg)) && duration > 1000) {
                 totalUsageTime += duration;
                 appOpenCount++;
                 if (duration > maxAppTime) { maxAppTime = duration; mostUsedApp = pkg; }
@@ -280,28 +310,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private MoodResult translateMood(long usageMinutes, int appOpenCount, boolean usedAtNight) {
-        if (usageMinutes > 300) return new MoodResult("🤯", "Overdose", new String[]{"System overload detected.", "Time to disconnect."});
-        if (usageMinutes >= 240) return new MoodResult("🔗", "Tethered", new String[]{"The phone feels glued to your hand.", "Borderline heavy usage."});
+        if (usageMinutes > 420) return new MoodResult("🤯", "Overdose", new String[]{"System overload detected.", "Time to disconnect."});
+        if (usageMinutes >= 360) return new MoodResult("🔗", "Tethered", new String[]{"The phone feels glued to your hand.", "Borderline heavy usage."});
         if (usageMinutes < 30) return new MoodResult("🌿", "Unplugged", new String[]{"Real life took priority.", "Digital distance felt natural."});
         if (usedAtNight && usageMinutes > 30) return new MoodResult("🌙", "Late-Night Thinker", new String[]{"Sleep was sacrificed for scrolling.", "A midnight mind wandering."});
         if (usageMinutes > 150 && appOpenCount < 15) return new MoodResult("🔥", "Hyperfocused", new String[]{"Deep work defined your day.", "Sustained attention."});
-        if (usageMinutes > 150 && appOpenCount > 45) return new MoodResult("🧠", "Restless Energy", new String[]{"Your mind was running sprints.", "Stimulation sought."});
-        if (usageMinutes < 150 && appOpenCount > 40) return new MoodResult("😵", "Distracted Mind", new String[]{"Focus was impossible.", "A butterfly flitting."});
+        if (usageMinutes > 150 && appOpenCount > 60) return new MoodResult("🧠", "Restless Energy", new String[]{"Your mind was running sprints.", "Stimulation sought."});
+        if (usageMinutes < 150 && appOpenCount > 50) return new MoodResult("😵", "Distracted Mind", new String[]{"Focus was impossible.", "A butterfly flitting."});
         if (usageMinutes < 90) return new MoodResult("😎", "Slick", new String[]{"In and out. Efficient.", "You rule the phone."});
-        if (appOpenCount < 30) return new MoodResult("🧐", "Serious Mode", new String[]{"Usage was purposeful.", "Disciplined session."});
-        if (appOpenCount >= 30) return new MoodResult("🎡", "Light-hearted", new String[]{"Just browsing and chatting.", "Casual wandering."});
+        if (appOpenCount < 20) return new MoodResult("🧐", "Serious Mode", new String[]{"Usage was purposeful.", "Disciplined session."});
+        if (appOpenCount > 80) return new MoodResult("🎡", "Light-hearted", new String[]{"Just browsing and chatting.", "Casual wandering."});
         return new MoodResult("🧘", "Calm & Grounded", new String[]{"A balanced digital rhythm.", "Stable connection."});
     }
 
     private boolean isAppLaunchable(String packageName) {
         try { return getPackageManager().getLaunchIntentForPackage(packageName) != null; }
         catch (Exception e) { return false; }
-    }
-
-    private String getAppName(String packageName) {
-        if (packageName.equals("General Usage")) return packageName;
-        try { return getPackageManager().getApplicationLabel(getPackageManager().getApplicationInfo(packageName, 0)).toString(); }
-        catch (PackageManager.NameNotFoundException e) { return packageName; }
     }
 
     private boolean isLateNightUsage(long todayStartIST) {

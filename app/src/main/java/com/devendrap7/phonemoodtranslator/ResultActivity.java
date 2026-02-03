@@ -200,18 +200,31 @@ public class ResultActivity extends AppCompatActivity {
                 usageMinutes/60, usageMinutes%60, appOpens);
 
         switch (title) {
-            case "Overdose": return "Why Overdose?\n\n• Usage > 5 hours\n• Extremely high consumption." + userStats;
-            case "Tethered": return "Why Tethered?\n\n• Usage between 4 - 5 hours\n• Borderline heavy usage." + userStats;
-            case "Late-Night Thinker": return "Why Late-Night?\n\n• Active between 11 PM - 4 AM\n• Regardless of total duration." + userStats;
-            case "Hyperfocused": return "Why Hyperfocused?\n\n• Usage > 2.5 hours\n• Very low switching (< 15 opens)." + userStats;
-            case "Restless Energy": return "Why Restless?\n\n• Usage > 2.5 hours\n• High switching (> 45 opens)." + userStats;
-            case "Distracted Mind": return "Why Distracted?\n\n• Lower usage (< 2.5h)\n• High switching (> 40 opens)." + userStats;
-            case "Serious Mode": return "Why Serious?\n\n• Moderate usage\n• Low switching (< 30 opens)." + userStats;
-            case "Light-hearted": return "Why Light-hearted?\n\n• Moderate usage\n• Casual switching (30+ opens)." + userStats;
-            case "Slick": return "Why Slick?\n\n• Usage < 1.5 hours\n• Efficient interactions." + userStats;
-            case "Unplugged": return "Why Unplugged?\n\n• Usage < 30 minutes\n• Almost zero screen time." + userStats;
-            case "Calm & Grounded": return "Why Calm?\n\n• Usage < 4 hours\n• Balanced switching stats." + userStats;
-            default: return "Calculated based on a balance of screen time and app switching frequency." + userStats;
+            // UPDATED THRESHOLDS
+            case "Overdose":
+                return "Why Overdose?\n\n• Usage > 7 hours\n• Extremely high consumption." + userStats;
+            case "Tethered":
+                return "Why Tethered?\n\n• Usage > 6 hours\n• Heavy, consistent usage." + userStats;
+            case "Late-Night Thinker":
+                return "Why Late-Night?\n\n• Active between 11 PM - 4 AM\n• Regardless of total duration." + userStats;
+            case "Hyperfocused":
+                return "Why Hyperfocused?\n\n• Usage > 2.5 hours\n• Very low switching (< 15 opens)." + userStats;
+            case "Restless Energy":
+                return "Why Restless?\n\n• Usage > 2.5 hours\n• High switching (> 60 opens)." + userStats;
+            case "Distracted Mind":
+                return "Why Distracted?\n\n• Lower usage (< 2.5h)\n• High switching (> 50 opens)." + userStats;
+            case "Slick":
+                return "Why Slick?\n\n• Usage < 1.5 hours\n• Efficient interactions." + userStats;
+            case "Unplugged":
+                return "Why Unplugged?\n\n• Usage < 30 minutes\n• Almost zero screen time." + userStats;
+            case "Serious Mode":
+                return "Why Serious?\n\n• Moderate usage\n• Low switching (< 20 opens)." + userStats;
+            case "Light-hearted":
+                return "Why Light-hearted?\n\n• Moderate usage\n• Casual switching (> 80 opens)." + userStats;
+            case "Calm & Grounded":
+                return "Why Calm?\n\n• Balanced usage\n• Not too long, not too frantic." + userStats;
+            default:
+                return "Calculated based on a balance of screen time and app switching frequency." + userStats;
         }
     }
 
@@ -246,11 +259,11 @@ public class ResultActivity extends AppCompatActivity {
     private void setupBarChart(BarChart barChart, int usageMinutes, int appOpens, int topAppMinutes, String topAppName) {
         ArrayList<BarEntry> entries = new ArrayList<>();
         entries.add(new BarEntry(0f, usageMinutes));
-        entries.add(new BarEntry(1f, appOpens * 5));
+        entries.add(new BarEntry(1f, appOpens * 4));
         entries.add(new BarEntry(2f, topAppMinutes));
 
         final String[] labels = new String[]{
-                "Total (min)", "App Opens (x5)",
+                "Total (min)", "App Opens (x4)",
                 topAppName != null ? topAppName.substring(0, Math.min(topAppName.length(), 15)) : "Top App"
         };
 

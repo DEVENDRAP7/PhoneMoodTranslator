@@ -1,4 +1,4 @@
-package com.devendrap7.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator.activities;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
+
+import com.devendrap7.phonemoodtranslator.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,12 +105,12 @@ public class MoodGalleryActivity extends AppCompatActivity {
         moods.add(new MoodItem("🔗", "Tethered", "Usage 6 - 7 Hours", "The phone feels glued to your hand. Borderline heavy usage pattern."));
         moods.add(new MoodItem("🌿", "Unplugged", "Usage < 30 Mins", "Real life took priority today. Digital distance felt natural and healthy."));
         moods.add(new MoodItem("🌙", "Late-Night Thinker", "11 PM - 4 AM Activity", "Sleep was sacrificed for scrolling. A midnight mind wandering through pixels."));
-        moods.add(new MoodItem("🔥", "Hyperfocused", "Usage > 2.5h • Low Unlocks", "Deep work defined your day. Sustained attention on a single task."));
-        moods.add(new MoodItem("🧠", "Restless Energy", "Usage > 2.5h • High Unlocks", "Your mind was running sprints. Constant switching seeking stimulation."));
-        moods.add(new MoodItem("😵", "Distracted Mind", "Low Usage • High Unlocks", "Focus was impossible today. A digital butterfly flitting from app to app."));
+        moods.add(new MoodItem("🔥", "Hyperfocused", "Usage > 3h • Low Unlocks", "Deep work defined your day. Sustained attention on a single task."));
+        moods.add(new MoodItem("🧠", "Restless Energy", "Usage > 3h • High Unlocks", "Your mind was running sprints. Constant switching seeking stimulation."));
+        moods.add(new MoodItem("😵", "Distracted Mind", "Moderate Usage • High Unlocks", "Focus was impossible today. A digital butterfly flitting from app to app."));
         moods.add(new MoodItem("😎", "Slick", "Usage < 1.5 Hours", "In and out. Efficient. You used the tool, the tool didn't use you."));
         moods.add(new MoodItem("🧐", "Serious Mode", "Moderate Time • Low Unlocks", "Usage was purposeful. You came for a reason and stayed for it."));
-        moods.add(new MoodItem("🎡", "Light-hearted", "Moderate Time • High Unlocks", "Just browsing, chatting, and wandering. A casual digital stroll."));
+        moods.add(new MoodItem("🎡", "Light-hearted", "Balanced Time • High Unlocks", "Just browsing, chatting, and wandering. A casual digital stroll."));
         moods.add(new MoodItem("🧘", "Calm & Grounded", "Balanced Stats", "A perfect digital rhythm. Not too long, not too frantic. Just right."));
         return moods;
     }

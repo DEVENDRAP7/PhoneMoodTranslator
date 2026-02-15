@@ -1,10 +1,12 @@
-package com.devendrap7.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.devendrap7.phonemoodtranslator.R;
 
 public class DisclaimerActivity extends AppCompatActivity {
 

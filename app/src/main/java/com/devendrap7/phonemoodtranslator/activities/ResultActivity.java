@@ -1,5 +1,8 @@
-package com.devendrap7.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator.activities;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -12,7 +15,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.devendrap7.phonemoodtranslator.viewmodels.MoodViewModel;
+import com.devendrap7.phonemoodtranslator.views.MoodPetView;
+import com.devendrap7.phonemoodtranslator.R;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
@@ -26,7 +33,7 @@ import java.util.ArrayList;
 public class ResultActivity extends AppCompatActivity {
 
     // Views
-    private TextView tvEmoji, tvTitle, tvDescription, tvUsageDetails, tvReflection, tvMoodCriteria;
+    private TextView tvEmoji, tvTitle, tvDescription, tvUsageDetails, tvReflection, tvMoodCriteria ,tvTapHint;
     private BarChart barChart;
     private Button btnDone;
     private ViewGroup rootLayout; // The main container
@@ -48,6 +55,25 @@ public class ResultActivity extends AppCompatActivity {
 
         // 1. Initialize Views First
         initializeViews();
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(tvEmoji, "scaleX", 1f, 1.15f, 1f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(tvEmoji, "scaleY", 1f, 1.15f, 1f);
+
+        scaleX.setRepeatCount(ValueAnimator.INFINITE);
+        scaleY.setRepeatCount(ValueAnimator.INFINITE);
+        scaleX.setDuration(1500);
+        scaleY.setDuration(1500);
+
+        AnimatorSet pulse = new AnimatorSet();
+        pulse.playTogether(scaleX, scaleY);
+        pulse.start();
+
+        // 3. Start the Fade on the Hint (Draws the eye)
+        ObjectAnimator fade = ObjectAnimator.ofFloat(tvTapHint, "alpha", 0.3f, 1f);
+        fade.setDuration(1000);
+        fade.setRepeatMode(ValueAnimator.REVERSE);
+        fade.setRepeatCount(ValueAnimator.INFINITE);
+        fade.start();
+
 
         // 2. Apply the User's Custom Theme (Background & Text)
         applySavedTheme();
@@ -76,7 +102,7 @@ public class ResultActivity extends AppCompatActivity {
         tvUsageDetails.setTextColor(textColor);
         tvReflection.setTextColor(textColor);
         tvMoodCriteria.setTextColor(textColor);
-
+        tvTapHint.setTextColor(textColor);
         // Emoji looks good in both, but we can update it too
         tvEmoji.setTextColor(textColor);
         Button btnDone = findViewById(R.id.btnDone);
@@ -106,6 +132,7 @@ public class ResultActivity extends AppCompatActivity {
         tvMoodCriteria = findViewById(R.id.tvMoodCriteria);
         btnDone = findViewById(R.id.btnDone);
         barChart = findViewById(R.id.barChart);
+        tvTapHint=findViewById(R.id.tvTapHint);
 
         // NEW: Initialize the Dog
         moodPet = findViewById(R.id.moodPet);
@@ -122,7 +149,7 @@ public class ResultActivity extends AppCompatActivity {
 
         // NEW: Feed Data to the Dog
         if (moodPet != null) {
-            moodPet.setMoodData(usageMinutes, appOpens);
+            moodPet.setMoodData(usageMinutes);
             // Ensure it starts hidden (We only show it in Criteria Mode)
             moodPet.setVisibility(View.GONE);
         }
@@ -210,17 +237,17 @@ public class ResultActivity extends AppCompatActivity {
             case "Hyperfocused":
                 return "Why Hyperfocused?\n\n• Usage > 2.5 hours\n• Very low switching (< 15 opens)." + userStats;
             case "Restless Energy":
-                return "Why Restless?\n\n• Usage > 2.5 hours\n• High switching (> 60 opens)." + userStats;
+                return "Why Restless?\n\n• Usage > 2.5 hours\n• High switching (> 15 opens)." + userStats;
             case "Distracted Mind":
-                return "Why Distracted?\n\n• Lower usage (< 2.5h)\n• High switching (> 50 opens)." + userStats;
+                return "Why Distracted?\n\n• Lower usage (< 2.5h)\n• High switching (> 15 opens)." + userStats;
             case "Slick":
                 return "Why Slick?\n\n• Usage < 1.5 hours\n• Efficient interactions." + userStats;
             case "Unplugged":
                 return "Why Unplugged?\n\n• Usage < 30 minutes\n• Almost zero screen time." + userStats;
             case "Serious Mode":
-                return "Why Serious?\n\n• Moderate usage\n• Low switching (< 20 opens)." + userStats;
+                return "Why Serious?\n\n• Moderate usage\n• Low switching (< 10 opens)." + userStats;
             case "Light-hearted":
-                return "Why Light-hearted?\n\n• Moderate usage\n• Casual switching (> 80 opens)." + userStats;
+                return "Why Light-hearted?\n\n• Moderate usage\n• Casual switching (> 10 opens)." + userStats;
             case "Calm & Grounded":
                 return "Why Calm?\n\n• Balanced usage\n• Not too long, not too frantic." + userStats;
             default:

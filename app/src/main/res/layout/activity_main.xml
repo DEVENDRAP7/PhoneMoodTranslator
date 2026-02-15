@@ -6,7 +6,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp"
-    tools:context=".MainActivity">
+    tools:context=".activities.MainActivity">
+
+    <ImageButton
+        android:id="@+id/btnMainInfo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="About App"
+        android:elevation="10dp"
+        android:src="@android:drawable/ic_dialog_info" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -58,7 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="View History"
+            android:text="View Insights &amp; History"
             android:textSize="16sp"
             android:textColor="#673AB7"
             android:backgroundTint="#FFFFFF"
@@ -77,6 +90,7 @@
         android:backgroundTint="#FFFFFF"
         app:tint="#000000"
         android:contentDescription="Change Background Color" />
+
     <LinearLayout
         android:id="@+id/layoutSwipeHint"
         android:layout_width="wrap_content"
@@ -98,9 +112,11 @@
             android:id="@+id/tvSwipeHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Swipe Up to check out Moods"
+            android:text="Swipe Up for Mood Gallery"
             android:textSize="12sp"
             android:textColor="?android:attr/textColorPrimary"/>
     </LinearLayout>
+
+
 
 </RelativeLayout>

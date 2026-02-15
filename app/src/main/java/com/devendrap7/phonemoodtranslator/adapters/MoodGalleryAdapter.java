@@ -1,4 +1,4 @@
-package com.devendrap7.phonemoodtranslator;
+package com.devendrap7.phonemoodtranslator.adapters;
 
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -9,6 +9,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.devendrap7.phonemoodtranslator.R;
+
 import java.util.List;
 
 public class MoodGalleryAdapter extends RecyclerView.Adapter<MoodGalleryAdapter.MoodViewHolder> {

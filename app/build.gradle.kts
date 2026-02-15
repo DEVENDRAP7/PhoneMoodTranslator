@@ -9,8 +9,8 @@ android {
         applicationId = "com.devendrap7.phonemoodtranslator"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -41,4 +41,13 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.github.yukuku:ambilwarna:2.0.1")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor ("androidx.room:room-compiler:2.6.1")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+    implementation("com.google.android.material:material:1.13.0")
+    // JSON Converter (To save lists of apps)
+    implementation("com.google.code.gson:gson:2.13.2")
+    implementation("androidx.work:work-runtime:2.9.0")
 }

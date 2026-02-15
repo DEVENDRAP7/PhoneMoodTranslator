@@ -1,5 +1,6 @@
 package com.devendrap7.phonemoodtranslator.fragments;
 
+import com.devendrap7.phonemoodtranslator.activities.MainActivity.AppUsageInfo;
 import android.app.Dialog;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -417,10 +418,8 @@ public class HeatmapFragment extends Fragment {
     }
 
     private void populateExpandedWeek(List<String> week) {
-        SimpleDateFormat inFmt  = new SimpleDateFormat(
-                "dd MMM yyyy", Locale.getDefault());
-        SimpleDateFormat outFmt = new SimpleDateFormat(
-                "d MMM", Locale.getDefault());
+        SimpleDateFormat inFmt  = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+        SimpleDateFormat outFmt = new SimpleDateFormat("d MMM", Locale.ENGLISH);
 
         // Week title
         String first = "", last = "";
@@ -444,22 +443,40 @@ public class HeatmapFragment extends Fragment {
 
         long[] dayMins = new long[7];
 
+        // ✅ hourly data for Samsung grid — [day][hour]
+        long[][] weekHourlyMins = new long[7][24];
+
         for (int i = 0; i < week.size(); i++) {
             String dateStr = week.get(i);
             if (dateStr.isEmpty()) continue;
             DailyStats stats = statsMap.get(dateStr);
             if (stats == null) continue;
 
-            long dayMs = stats.totalUsageTime;
-            weekTotal += dayMs;
-            dayMins[i] = dayMs / 60000;
+            weekTotal += stats.totalUsageTime;
+            dayMins[i] = stats.totalUsageTime / 60000;
+
+            // ✅ Parse hourlyDataJson if available
+            if (stats.hourlyDataJson != null) {
+                try {
+                    long[] hourly = gson.fromJson(stats.hourlyDataJson, long[].class);
+                    if (hourly != null && hourly.length == 24) {
+                        weekHourlyMins[i] = hourly;
+                    }
+                } catch (Exception e) {
+                    // fallback to estimate
+                    weekHourlyMins[i] = estimateHourlyDistribution(stats);
+                }
+            } else {
+                // fallback to estimate for old records
+                weekHourlyMins[i] = estimateHourlyDistribution(stats);
+            }
 
             // Top app aggregation
             if (stats.topAppsJson != null) {
                 try {
-                    List<MainActivity.AppUsageInfo> apps = gson.fromJson(stats.topAppsJson, listType);
-
-                    for (MainActivity.AppUsageInfo app : apps){
+                    List<MainActivity.AppUsageInfo> apps =
+                            gson.fromJson(stats.topAppsJson, listType);
+                    for (MainActivity.AppUsageInfo app : apps) {
                         appTotals.put(app.name,
                                 appTotals.getOrDefault(app.name, 0L)
                                         + app.usageTime);
@@ -489,8 +506,69 @@ public class HeatmapFragment extends Fragment {
         tvWeekTopApp.setText(topApp + "\n"
                 + (topH > 0 ? topH + "h " : "") + topM + "m");
 
+        // ✅ Build Samsung style grid
+        buildSamsungHeatmapGrid(weekHourlyMins, week);
+
         // Build mini bar chart
         buildMiniBarChart(dayMins, week);
+    }
+
+    // ─────────────────────────────────────────
+// SAMSUNG STYLE HOURLY HEATMAP GRID
+// ─────────────────────────────────────────
+    private void buildSamsungHeatmapGrid(long[][] weekHourlyMins, List<String> week) {
+        LinearLayout grid = requireView().findViewById(R.id.samsungHeatmapGrid);
+        grid.removeAllViews();
+
+        float density   = getResources().getDisplayMetrics().density;
+        int blockHeight = (int) (16 * density);
+        int blockMargin = (int) (1.5f * density);
+
+        String[] dayLabels = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+
+        for (int day = 0; day < 7; day++) {
+            LinearLayout row = new LinearLayout(getContext());
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            rowParams.setMargins(0, blockMargin, 0, blockMargin);
+            row.setLayoutParams(rowParams);
+
+            // Day label
+            TextView dayLabel = new TextView(getContext());
+            LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
+                    (int) (32 * density), blockHeight);
+            dayLabel.setLayoutParams(labelParams);
+            dayLabel.setText(dayLabels[day]);
+            dayLabel.setTextSize(9f);
+            dayLabel.setTextColor(Color.parseColor("#555555"));
+            dayLabel.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            dayLabel.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.addView(dayLabel);
+
+            // 24 hour blocks
+            for (int hour = 0; hour < 24; hour++) {
+                long mins = weekHourlyMins[day][hour];
+
+                View block = new View(getContext());
+                LinearLayout.LayoutParams blockParams = new LinearLayout.LayoutParams(
+                        0, blockHeight, 1f);
+                blockParams.setMargins(blockMargin, 0, blockMargin, 0);
+                block.setLayoutParams(blockParams);
+
+                android.graphics.drawable.GradientDrawable bg =
+                        new android.graphics.drawable.GradientDrawable();
+                bg.setCornerRadius(3f);
+                bg.setColor(getHeatColor(mins));
+                block.setBackground(bg);
+
+                row.addView(block);
+            }
+            grid.addView(row);
+        }
     }
 
     // ─────────────────────────────────────────

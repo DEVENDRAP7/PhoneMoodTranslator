@@ -218,14 +218,14 @@
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#1c1554"
-                        android:layout_marginBottom="4dp"/>
+                        android:layout_marginBottom="16dp"/>
 
                     <!-- Week Summary Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="20dp">
 
                         <!-- Total Time -->
                         <androidx.cardview.widget.CardView
@@ -318,7 +318,114 @@
 
                     </LinearLayout>
 
-                    <!-- Mini Bar Chart Container -->
+                    <!-- ── SAMSUNG STYLE HOURLY HEATMAP ── -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hourly Usage Pattern"
+                        android:textSize="13sp"
+                        android:textColor="#888888"
+                        android:layout_marginBottom="8dp"/>
+
+                    <!-- Hour labels row at top -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="0"
+                            android:textSize="9sp"
+                            android:textColor="#AAAAAA"
+                            android:gravity="start"/>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="6"
+                            android:textSize="9sp"
+                            android:textColor="#AAAAAA"
+                            android:gravity="center"/>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="12"
+                            android:textSize="9sp"
+                            android:textColor="#AAAAAA"
+                            android:gravity="center"/>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="18"
+                            android:textSize="9sp"
+                            android:textColor="#AAAAAA"
+                            android:gravity="center"/>
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="24h"
+                            android:textSize="9sp"
+                            android:textColor="#AAAAAA"
+                            android:gravity="end"/>
+
+                    </LinearLayout>
+
+                    <!-- Samsung Grid Container — rows added programmatically -->
+                    <LinearLayout
+                        android:id="@+id/samsungHeatmapGrid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- Legend -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Less "
+                            android:textSize="11sp"
+                            android:textColor="#AAAAAA"/>
+
+                        <View android:layout_width="12dp" android:layout_height="12dp"
+                            android:background="#E8E8E8" android:layout_marginEnd="3dp"/>
+                        <View android:layout_width="12dp" android:layout_height="12dp"
+                            android:background="#FFE0B2" android:layout_marginEnd="3dp"/>
+                        <View android:layout_width="12dp" android:layout_height="12dp"
+                            android:background="#FFB74D" android:layout_marginEnd="3dp"/>
+                        <View android:layout_width="12dp" android:layout_height="12dp"
+                            android:background="#FF8C00" android:layout_marginEnd="3dp"/>
+                        <View android:layout_width="12dp" android:layout_height="12dp"
+                            android:background="#E65100" android:layout_marginEnd="3dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" More"
+                            android:textSize="11sp"
+                            android:textColor="#AAAAAA"/>
+
+                    </LinearLayout>
+
+                    <!-- Mini Bar Chart -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -335,7 +442,6 @@
                         android:gravity="bottom"
                         android:layout_marginBottom="8dp"/>
 
-                    <!-- Day Labels under bars -->
                     <LinearLayout
                         android:id="@+id/weekBarLabels"
                         android:layout_width="match_parent"

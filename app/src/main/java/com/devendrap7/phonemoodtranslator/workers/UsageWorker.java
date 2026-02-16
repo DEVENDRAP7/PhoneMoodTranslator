@@ -67,7 +67,7 @@ public class UsageWorker extends Worker {
         long lastAlertTime = prefs.getLong("last_alert_timestamp", 0);
 
         // 1. Midnight Calculation (IST)
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         int currentMonth = calendar.get(Calendar.MONTH) + 1;
         int currentYear = calendar.get(Calendar.YEAR);
         calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0);
@@ -99,10 +99,10 @@ public class UsageWorker extends Worker {
 
         // 4. Update Database for the Pie Chart/History
         updateDatabase(context, totalUsageMillis, currentMonth, currentYear);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getDefault());
         String todayDate = sdf.format(Calendar.getInstance(
-                TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+                TimeZone.getDefault()).getTime());
 
         AppDatabase db = AppDatabase.getDatabase(context);
         DailyStats fresh = db.statsDao().getStatsByDate(todayDate);
@@ -157,9 +157,9 @@ public class UsageWorker extends Worker {
 
     private void updateDatabase(Context context, long totalTime, int month, int year) {
         AppDatabase db = AppDatabase.getDatabase(context);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getDefault());
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
         String today = sdf.format(cal.getTime());
 
         int currentDay   = cal.get(Calendar.DAY_OF_MONTH); // ✅

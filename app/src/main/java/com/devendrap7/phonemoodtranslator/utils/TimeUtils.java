@@ -19,7 +19,7 @@ public class TimeUtils {
     }
 
     public static String getTodayDateString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
         return sdf.format(new Date());
     }
 }

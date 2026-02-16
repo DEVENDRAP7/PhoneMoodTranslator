@@ -113,11 +113,11 @@ public class HeatmapFragment extends Fragment {
 
             SimpleDateFormat sdf = new SimpleDateFormat(
                     "dd MMM yyyy", Locale.ENGLISH);
-            sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+            sdf.setTimeZone(TimeZone.getDefault());
 
             // Find Monday of the week containing earliest record
             Calendar start = Calendar.getInstance(
-                    TimeZone.getTimeZone("Asia/Kolkata"));
+                    TimeZone.getDefault());
             if (!allStats.isEmpty()) {
                 try { start.setTime(sdf.parse(allStats.get(0).date)); }
                 catch (Exception e) { e.printStackTrace(); }
@@ -132,7 +132,7 @@ public class HeatmapFragment extends Fragment {
 
 // Find Monday of current week then go to Sunday
             Calendar end = Calendar.getInstance(
-                    TimeZone.getTimeZone("Asia/Kolkata"));
+                    TimeZone.getDefault());
             end.set(Calendar.HOUR_OF_DAY, 23);
             end.set(Calendar.MINUTE, 59);
             end.set(Calendar.SECOND, 59);
@@ -187,7 +187,7 @@ public class HeatmapFragment extends Fragment {
 
 // ✅ Find current week index within current month
             String todayStr = sdf.format(Calendar.getInstance(
-                    TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+                    TimeZone.getDefault()).getTime());
             currentMonthWeeks = getWeeksForMonth(nowMonth);
             currentWeekIndex = 0; // default to first week
             for (int i = 0; i < currentMonthWeeks.size(); i++) {
@@ -561,7 +561,7 @@ public class HeatmapFragment extends Fragment {
                     "MMMM yyyy", Locale.ENGLISH);
             SimpleDateFormat dateFmt  = new SimpleDateFormat(
                     "dd MMM yyyy", Locale.ENGLISH);
-            dateFmt.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+            dateFmt.setTimeZone(TimeZone.getDefault());
 
             String nowMonth = monthFmt.format(
                     Calendar.getInstance().getTime());

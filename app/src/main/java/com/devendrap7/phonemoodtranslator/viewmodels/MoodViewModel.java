@@ -21,10 +21,10 @@ public class MoodViewModel extends ViewModel {
     public void init(Context context) {
         if (db == null) {
             db = AppDatabase.getDatabase(context.getApplicationContext());
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-            sdf.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Kolkata"));
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+            sdf.setTimeZone(java.util.TimeZone.getDefault());
             String todayDate = sdf.format(java.util.Calendar.getInstance(
-                    java.util.TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+                    java.util.TimeZone.getDefault()).getTime());
             todayStats = db.statsDao().getStatsByDateLive(todayDate);
         }
     }

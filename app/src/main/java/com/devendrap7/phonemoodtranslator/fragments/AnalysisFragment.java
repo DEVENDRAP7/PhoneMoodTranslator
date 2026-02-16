@@ -237,9 +237,9 @@ public class AnalysisFragment extends Fragment {
                         try {
                             SimpleDateFormat pSdf = new SimpleDateFormat(
                                     "dd MMM yyyy", Locale.ENGLISH);
-                            pSdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+                            pSdf.setTimeZone(TimeZone.getDefault());
                             Calendar c = Calendar.getInstance(
-                                    TimeZone.getTimeZone("Asia/Kolkata"));
+                                    TimeZone.getDefault());
                             c.setTime(pSdf.parse(s.date));
                             s.dateTimestamp = c.getTimeInMillis();
                             s.dayOfMonth    = c.get(Calendar.DAY_OF_MONTH);
@@ -260,9 +260,9 @@ public class AnalysisFragment extends Fragment {
 
             // ✅ Always use Locale.ENGLISH to match DB storage format
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-            sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+            sdf.setTimeZone(TimeZone.getDefault());
             String todayDate = sdf.format(Calendar.getInstance(
-                    TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+                    TimeZone.getDefault()).getTime());
 
             android.util.Log.d("WEEKLY_DEBUG", "Today string: " + todayDate);
 
@@ -324,7 +324,7 @@ public class AnalysisFragment extends Fragment {
         ArrayList<String> xLabels  = new ArrayList<>();
 
         // ✅ Start from Monday of current week
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
@@ -335,10 +335,10 @@ public class AnalysisFragment extends Fragment {
 
         // ✅ Always use Locale.ENGLISH to match DB storage
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+        sdf.setTimeZone(TimeZone.getDefault());
 
         SimpleDateFormat dayLabelFmt = new SimpleDateFormat("E", Locale.ENGLISH);
-        dayLabelFmt.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+        dayLabelFmt.setTimeZone(TimeZone.getDefault());
 
         for (int i = 0; i < 7; i++) {
             String dateString = sdf.format(cal.getTime());
@@ -354,7 +354,7 @@ public class AnalysisFragment extends Fragment {
                     // Re-parse and re-format in English to handle locale issues
                     SimpleDateFormat parser = new SimpleDateFormat(
                             "dd MMM yyyy", Locale.ENGLISH);
-                    parser.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+                    parser.setTimeZone(TimeZone.getDefault());
                     normalizedDate = parser.format(parser.parse(stat.date));
                 } catch (Exception e) {
                     // If parsing fails keep original
@@ -739,7 +739,7 @@ public class AnalysisFragment extends Fragment {
         } else {
             // Weekly view — Mon to Sun
             Calendar cal = Calendar.getInstance(
-                    TimeZone.getTimeZone("Asia/Kolkata"));
+                    TimeZone.getDefault());
             cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
@@ -750,7 +750,7 @@ public class AnalysisFragment extends Fragment {
             SimpleDateFormat sdf = new SimpleDateFormat(
                     "dd MMM yyyy", Locale.ENGLISH);
             String todayStr = sdf.format(Calendar.getInstance(
-                    TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+                    TimeZone.getDefault()).getTime());
             long todayUsage = 0;
 
             for (int i = 0; i < 7; i++) {
@@ -798,9 +798,9 @@ public class AnalysisFragment extends Fragment {
         Gson gson = new Gson();
         Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
-        String todayDate = sdf.format(Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getDefault());
+        String todayDate = sdf.format(Calendar.getInstance(TimeZone.getDefault()).getTime());
 
         for (DailyStats day : statsList) {
             // Only sum usage if it matches today's date for the progress bars

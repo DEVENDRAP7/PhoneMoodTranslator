@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
         UsageStatsManager usageStatsManager = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
 
         // STRICT MIDNIGHT RESET
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void readUsageDataSilent() {
         UsageStatsManager usageStatsManager = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
@@ -411,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
     // ✅ NEW METHOD — distributes usage time into hourly buckets
     private void distributeToHourlyBuckets(long[] hourlyMillis,
                                            long startMs, long endMs) {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        Calendar cal = Calendar.getInstance();
 
         long cursor = startMs;
         while (cursor < endMs) {
@@ -455,11 +455,10 @@ public class MainActivity extends AppCompatActivity {
                                 String hourlyDataJson) { // ✅ new param
         java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                Calendar cal = Calendar.getInstance(
-                        TimeZone.getTimeZone("Asia/Kolkata"));
+                Calendar cal = Calendar.getInstance();
                 SimpleDateFormat dateFormat = new SimpleDateFormat(
-                        "dd MMM yyyy", Locale.getDefault());
-                dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+                        "dd MMM yyyy", Locale.ENGLISH);
+                dateFormat.setTimeZone(TimeZone.getDefault());
                 String todayDate = dateFormat.format(cal.getTime());
 
                 int currentMonth = cal.get(Calendar.MONTH) + 1;
@@ -509,7 +508,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isLateNightUsage(long todayStartIST) {
-        Calendar now = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        Calendar now = Calendar.getInstance(TimeZone.getDefault());
         int hour = now.get(Calendar.HOUR_OF_DAY);
         return (hour >= 23 || hour <= 4);
     }

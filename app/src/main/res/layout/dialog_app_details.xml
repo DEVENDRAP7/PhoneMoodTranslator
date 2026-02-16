@@ -94,10 +94,11 @@
                 android:layout_marginEnd="8dp">
 
                 <TextView
+                    android:id="@+id/tvLabelWeekly"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Weekly Avg"
-                    android:textSize="12sp"
+                    android:text="Today's Usage"
+                    android:textSize="11sp"
                     android:textColor="#000000"/>
                 <TextView
                     android:id="@+id/tvWeeklyAvg"
@@ -120,9 +121,10 @@
                 android:layout_marginEnd="8dp">
 
                 <TextView
+                    android:id="@+id/tvLabelMonthly"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Monthly Avg"
+                    android:text="Weekly Avg"
                     android:textSize="12sp"
                     android:textColor="#000000"/>
                 <TextView
@@ -145,10 +147,11 @@
                 android:padding="12dp">
 
                 <TextView
+                    android:id="@+id/tvLabelTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Total"
-                    android:textSize="12sp"
+                    android:text="Weekly Total"
+                    android:textSize="11sp"
                     android:textColor="#000000"/>
                 <TextView
                     android:id="@+id/tvTotalUsage"

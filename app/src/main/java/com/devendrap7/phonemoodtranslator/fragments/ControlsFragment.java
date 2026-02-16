@@ -64,7 +64,10 @@ public class ControlsFragment extends Fragment {
         // ── Load saved theme color ──
         currentColor = prefs.getInt("bg_color",
                 Color.parseColor("#4A148C"));
-        viewColorPreview.setBackgroundColor(currentColor);
+        viewColorPreview.setBackground(
+                requireContext().getDrawable(R.drawable.circle_preview));
+        viewColorPreview.setBackgroundTintList(
+                android.content.res.ColorStateList.valueOf(currentColor));
 
         // ── Save Note ──
         btnSaveNote.setOnClickListener(v -> {
@@ -132,10 +135,10 @@ public class ControlsFragment extends Fragment {
                             currentColor = color;
                             // ✅ Save to prefs
                             prefs.edit().putInt("bg_color", color).apply();
+                            viewColorPreview.setBackground(
+                                    requireContext().getDrawable(R.drawable.circle_preview));
                             viewColorPreview.setBackgroundTintList(
                                     android.content.res.ColorStateList.valueOf(currentColor));
-                            // ✅ Update preview circle
-                            viewColorPreview.setBackgroundColor(color);
                             Toast.makeText(getContext(),
                                     "Theme saved! Restart app to apply.",
                                     Toast.LENGTH_SHORT).show();

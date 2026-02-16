@@ -694,68 +694,99 @@ public class AnalysisFragment extends Fragment {
         pieChart.invalidate();
 
     }
-    private void updatePopupChart(BarChart detailChart, String appName, boolean showMonthly,
-                                  TextView tvWeekly, TextView tvMonthly, TextView tvTotal) {
+    private void updatePopupChart(BarChart detailChart, String appName,
+                                  boolean showMonthly,
+                                  TextView tvWeekly, TextView tvMonthly,
+                                  TextView tvTotal,
+                                  TextView tvLabelWeekly,
+                                  TextView tvLabelMonthly,
+                                  TextView tvLabelTotal) {
         ArrayList<BarEntry> entries = new ArrayList<>();
         ArrayList<String> xLabels = new ArrayList<>();
         long totalAppUsage = 0;
         Gson gson = new Gson();
         Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
 
-        // 1. Create a LOCAL copy of the list so we don't mess up the Main Screen
         List<DailyStats> localStats = new ArrayList<>(historyStatsList);
-        // 2. FORCE the list to be Newest First (Feb 12, Feb 11, Feb 10...)
-        // This ensures our logic below always starts from "Today"
         Collections.sort(localStats, (a, b) -> b.date.compareTo(a.date));
+
+        int daysWithData = 0;
 
         if (showMonthly) {
             int count = Math.min(localStats.size(), 30);
-
-            // Loop backwards from oldest to newest to get 10 -> 11 -> 12 flow
             for (int i = count - 1; i >= 0; i--) {
                 DailyStats day = localStats.get(i);
                 long usage = getAppUsageForDay(day, appName, gson, listType);
                 totalAppUsage += usage;
-
+                if (usage > 0) daysWithData++;
                 int xIndex = (count - 1) - i;
                 entries.add(new BarEntry(xIndex, usage / 3600000f));
                 xLabels.add(day.date.substring(0, 2));
             }
-        }else {
-            // Load Week Data (Mon - Sun)
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+
+            // ✅ Monthly labels
+            if (tvLabelWeekly  != null) tvLabelWeekly.setText("Days Used");
+            if (tvLabelMonthly != null) tvLabelMonthly.setText("Monthly Avg");
+            if (tvLabelTotal   != null) tvLabelTotal.setText("Monthly Total");
+
+            // ✅ Monthly values
+            long monthlyAvg = daysWithData > 0
+                    ? totalAppUsage / daysWithData : 0;
+            if (tvWeekly  != null) tvWeekly.setText(daysWithData + "d");
+            if (tvMonthly != null) tvMonthly.setText(formatTime(monthlyAvg));
+            if (tvTotal   != null) tvTotal.setText(formatTime(totalAppUsage));
+
+        } else {
+            // Weekly view — Mon to Sun
+            Calendar cal = Calendar.getInstance(
+                    TimeZone.getTimeZone("Asia/Kolkata"));
             cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
-            while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+            while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY)
                 cal.add(Calendar.DAY_OF_YEAR, -1);
-            }
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+
+            SimpleDateFormat sdf = new SimpleDateFormat(
+                    "dd MMM yyyy", Locale.ENGLISH);
+            String todayStr = sdf.format(Calendar.getInstance(
+                    TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+            long todayUsage = 0;
+
             for (int i = 0; i < 7; i++) {
                 String target = sdf.format(cal.getTime());
                 long usage = 0;
                 for (DailyStats day : historyStatsList) {
                     if (day.date.equals(target)) {
-                        usage = getAppUsageForDay(day, appName, gson, listType);
+                        usage = getAppUsageForDay(
+                                day, appName, gson, listType);
+                        if (target.equals(todayStr))
+                            todayUsage = usage;
                         break;
                     }
                 }
                 totalAppUsage += usage;
+                if (usage > 0) daysWithData++;
                 entries.add(new BarEntry(i, usage / 3600000f));
-                xLabels.add(new SimpleDateFormat("E", Locale.ENGLISH).format(cal.getTime()));
+                xLabels.add(new SimpleDateFormat("E", Locale.ENGLISH)
+                        .format(cal.getTime()));
                 cal.add(Calendar.DAY_OF_YEAR, 1);
             }
+
+            // ✅ Weekly labels
+            if (tvLabelWeekly  != null) tvLabelWeekly.setText("Today's Usage");
+            if (tvLabelMonthly != null) tvLabelMonthly.setText("Weekly Avg");
+            if (tvLabelTotal   != null) tvLabelTotal.setText("Weekly Total");
+
+            // ✅ Weekly values
+            long weeklyAvg = daysWithData > 0
+                    ? totalAppUsage / daysWithData : 0;
+            if (tvWeekly  != null) tvWeekly.setText(formatTime(todayUsage));
+            if (tvMonthly != null) tvMonthly.setText(formatTime(weeklyAvg));
+            if (tvTotal   != null) tvTotal.setText(formatTime(totalAppUsage));
         }
 
-        // Update Text Labels
-        int div = historyStatsList.isEmpty() ? 1 : historyStatsList.size();
-        tvWeekly.setText(formatTime(totalAppUsage / div));
-        tvMonthly.setText(formatTime(totalAppUsage));
-        tvTotal.setText(formatTime(totalAppUsage));
-
-        // Render the Chart using your existing render method
-        renderBarChart(detailChart, entries, xLabels,false);
+        renderBarChart(detailChart, entries, xLabels, false);
     }
     // =========================================================
     // 📱 UPDATED APP LIST LOGIC (NOW SHOWS ALL + SORTED)
@@ -875,74 +906,72 @@ public class AnalysisFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_app_details);
 
-
-
         // 1. Setup Window
         Window window = dialog.getWindow();
         if (window != null) {
-            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, (int) (getResources().getDisplayMetrics().heightPixels * 0.75));
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
+                    (int) (getResources().getDisplayMetrics().heightPixels * 0.75));
             window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             window.setGravity(Gravity.BOTTOM);
         }
 
         // 2. Find Views
-        MaterialButtonToggleGroup popupToggle = dialog.findViewById(R.id.popupToggleGroup);
-        BarChart detailChart = dialog.findViewById(R.id.detailBarChart);
-        TextView tvWeekly = dialog.findViewById(R.id.tvWeeklyAvg);
-        TextView tvMonthly = dialog.findViewById(R.id.tvMonthlyAvg);
-        TextView tvTotal = dialog.findViewById(R.id.tvTotalUsage);
-        trend=dialog.findViewById(R.id.trend);
-        ((ImageView)dialog.findViewById(R.id.imgDetailIcon)).setImageDrawable(icon);
-        ((TextView)dialog.findViewById(R.id.tvDetailTitle)).setText(appName);
+        MaterialButtonToggleGroup popupToggle =
+                dialog.findViewById(R.id.popupToggleGroup);
+        BarChart detailChart   = dialog.findViewById(R.id.detailBarChart);
+        TextView tvWeekly      = dialog.findViewById(R.id.tvWeeklyAvg);
+        TextView tvMonthly     = dialog.findViewById(R.id.tvMonthlyAvg);
+        TextView tvTotal       = dialog.findViewById(R.id.tvTotalUsage);
+        TextView tvLabelWeekly  = dialog.findViewById(R.id.tvLabelWeekly);
+        TextView tvLabelMonthly = dialog.findViewById(R.id.tvLabelMonthly);
+        TextView tvLabelTotal   = dialog.findViewById(R.id.tvLabelTotal);
+        trend = dialog.findViewById(R.id.trend);
 
-        Button btnWeek = dialog.findViewById(R.id.btnPopupWeek);
+        ((ImageView) dialog.findViewById(R.id.imgDetailIcon))
+                .setImageDrawable(icon);
+        ((TextView) dialog.findViewById(R.id.tvDetailTitle))
+                .setText(appName);
+
+        Button btnWeek  = dialog.findViewById(R.id.btnPopupWeek);
         Button btnMonth = dialog.findViewById(R.id.btnPopupMonth);
 
         btnMonth.setBackgroundColor(Color.parseColor("#F7E7CE"));
         btnWeek.setBackgroundColor(Color.parseColor("#1c1554"));
         btnWeek.setTextColor(Color.WHITE);
 
-
-        // 3. Handle Toggle Listener
+        // 3. Handle Toggle Listener — single listener only
         popupToggle.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (isChecked) {
-                if(checkedId==R.id.btnPopupWeek){
-                    trend.setText("Weekly Trend");
-                }
-                else{
-                    setupAppDetailMonthlyChart(detailChart, appName, historyStatsList);
-                    trend.setText("Monthly Trend");
-                }
+            if (!isChecked) return;
 
-                // Reset both to "Unselected" style (Beige background, Dark text)
-                btnWeek.setBackgroundColor(Color.parseColor("#F7E7CE"));
-                btnWeek.setTextColor(Color.parseColor("#333333"));
-                btnMonth.setBackgroundColor(Color.parseColor("#F7E7CE"));
-                btnMonth.setTextColor(Color.parseColor("#333333"));
+            // Update trend label
+            trend.setText(checkedId == R.id.btnPopupWeek
+                    ? "Weekly Trend" : "Monthly Trend");
 
-                // Highlight the selected one (Dark background, White text)
-                Button selected = dialog.findViewById(checkedId);
-                selected.setBackgroundColor(Color.parseColor("#1c1554"));
-                selected.setTextColor(Color.WHITE);
+            // Reset both buttons
+            btnWeek.setBackgroundColor(Color.parseColor("#F7E7CE"));
+            btnWeek.setTextColor(Color.parseColor("#333333"));
+            btnMonth.setBackgroundColor(Color.parseColor("#F7E7CE"));
+            btnMonth.setTextColor(Color.parseColor("#333333"));
 
-                boolean showMonthly = popupToggle.getCheckedButtonId() == R.id.btnPopupMonth;
-                updatePopupChart(detailChart, appName, showMonthly, tvWeekly, tvMonthly, tvTotal);
-            }
+            // Highlight selected
+            Button selected = dialog.findViewById(checkedId);
+            selected.setBackgroundColor(Color.parseColor("#1c1554"));
+            selected.setTextColor(Color.WHITE);
+
+            boolean showMonthly = (checkedId == R.id.btnPopupMonth);
+            updatePopupChart(detailChart, appName, showMonthly,
+                    tvWeekly, tvMonthly, tvTotal,
+                    tvLabelWeekly, tvLabelMonthly, tvLabelTotal);
         });
 
-
-        // 4. Initial Load: Set toggle state to match main screen and load data
+        // 4. Initial Load
         popupToggle.check(R.id.btnPopupWeek);
-        updatePopupChart(detailChart, appName, false, tvWeekly, tvMonthly, tvTotal);
-        popupToggle.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (isChecked) {
-                boolean showMonthly = (checkedId == R.id.btnPopupMonth);
-                updatePopupChart(detailChart, appName, showMonthly, tvWeekly, tvMonthly, tvTotal);
-            }
-        });
+        updatePopupChart(detailChart, appName, false,
+                tvWeekly, tvMonthly, tvTotal,
+                tvLabelWeekly, tvLabelMonthly, tvLabelTotal);
 
-
-        dialog.findViewById(R.id.btnCloseDetail).setOnClickListener(v -> dialog.dismiss());
+        dialog.findViewById(R.id.btnCloseDetail)
+                .setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 

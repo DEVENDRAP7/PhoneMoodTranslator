@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {DailyStats.class}, version = 3)
+@Database(entities = {DailyStats.class}, version = 3,exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract StatsDao statsDao();

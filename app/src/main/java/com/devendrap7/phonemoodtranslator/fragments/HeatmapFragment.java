@@ -36,8 +36,6 @@ public class HeatmapFragment extends Fragment {
 
     // ── Views ──
     private LinearLayout samsungHeatmapGrid;
-    private LinearLayout weekBarChart;
-    private LinearLayout weekBarLabels;
     private TextView tvCurrentMonth, tvCurrentWeek;
     private android.widget.ImageButton tvPrevMonth, tvNextMonth;
     private android.widget.ImageButton tvPrevWeek, tvNextWeek;
@@ -76,8 +74,6 @@ public class HeatmapFragment extends Fragment {
 
         // Find views
         samsungHeatmapGrid = view.findViewById(R.id.samsungHeatmapGrid);
-        weekBarChart       = view.findViewById(R.id.weekBarChart);
-        weekBarLabels      = view.findViewById(R.id.weekBarLabels);
         tvCurrentMonth     = view.findViewById(R.id.tvCurrentMonth);
         tvPrevMonth        = view.findViewById(R.id.tvPrevMonth);
         tvNextMonth        = view.findViewById(R.id.tvNextMonth);
@@ -182,12 +178,25 @@ public class HeatmapFragment extends Fragment {
                 }
             }
 
-            // Start on current month
+            // ✅ Start on current month
             String nowMonth = monthFmt.format(
                     Calendar.getInstance().getTime());
             currentMonthIndex = monthList.indexOf(nowMonth);
             if (currentMonthIndex < 0)
                 currentMonthIndex = monthList.size() - 1;
+
+// ✅ Find current week index within current month
+            String todayStr = sdf.format(Calendar.getInstance(
+                    TimeZone.getTimeZone("Asia/Kolkata")).getTime());
+            currentMonthWeeks = getWeeksForMonth(nowMonth);
+            currentWeekIndex = 0; // default to first week
+            for (int i = 0; i < currentMonthWeeks.size(); i++) {
+                List<String> week = currentMonthWeeks.get(i);
+                if (week.contains(todayStr)) {
+                    currentWeekIndex = i;
+                    break;
+                }
+            }
 
             // All time stats
             long totalUsage = 0, peakUsage = 0;
@@ -491,78 +500,6 @@ public class HeatmapFragment extends Fragment {
         tvWeekTopApp.setText(topApp + "\n"
                 + (topMins/60 > 0 ? topMins/60 + "h " : "")
                 + topMins%60 + "m");
-
-        // Mini bar chart
-        buildMiniBarChart(dayMins);
-    }
-
-    // ─────────────────────────────────────────
-    // MINI BAR CHART
-    // ─────────────────────────────────────────
-    private void buildMiniBarChart(long[] dayMins) {
-        weekBarChart.removeAllViews();
-        weekBarLabels.removeAllViews();
-
-        long maxMins = 1;
-        for (long m : dayMins) if (m > maxMins) maxMins = m;
-
-        float density   = getResources().getDisplayMetrics().density;
-        int chartHeight = (int) (100 * density);
-
-        for (int i = 0; i < 7; i++) {
-            // Bar column
-            LinearLayout barCol = new LinearLayout(getContext());
-            barCol.setOrientation(LinearLayout.VERTICAL);
-            barCol.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            LinearLayout.LayoutParams colP =
-                    new LinearLayout.LayoutParams(0, chartHeight, 1f);
-            colP.setMargins(4, 0, 4, 0);
-            barCol.setLayoutParams(colP);
-
-            float ratio   = (float) dayMins[i] / maxMins;
-            int barHeight = (int) (chartHeight * ratio);
-            if (barHeight < 4 && dayMins[i] > 0) barHeight = 4;
-
-            // Minutes label
-            if (dayMins[i] > 0) {
-                TextView minLabel = new TextView(getContext());
-                minLabel.setText(dayMins[i] >= 60
-                        ? (dayMins[i]/60) + "h"
-                        : dayMins[i] + "m");
-                minLabel.setTextSize(8f);
-                minLabel.setTextColor(Color.parseColor("#555555"));
-                minLabel.setGravity(Gravity.CENTER);
-                minLabel.setLayoutParams(new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT));
-                barCol.addView(minLabel);
-            }
-
-            // Bar
-            View bar = new View(getContext());
-            bar.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, barHeight));
-            GradientDrawable barBg = new GradientDrawable();
-            barBg.setCornerRadius(6f);
-            barBg.setColor(getHeatColor(dayMins[i]));
-            bar.setBackground(barBg);
-            barCol.addView(bar);
-            weekBarChart.addView(barCol);
-
-            // Day label
-            TextView dayLabel = new TextView(getContext());
-            dayLabel.setText(DAY_LABELS[i].substring(0, 1));
-            dayLabel.setTextSize(10f);
-            dayLabel.setTextColor(Color.parseColor("#888888"));
-            dayLabel.setGravity(Gravity.CENTER);
-            dayLabel.setTypeface(Typeface.DEFAULT_BOLD);
-            LinearLayout.LayoutParams dlP =
-                    new LinearLayout.LayoutParams(0,
-                            ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            dlP.setMargins(4, 4, 4, 0);
-            dayLabel.setLayoutParams(dlP);
-            weekBarLabels.addView(dayLabel);
-        }
     }
 
     // ─────────────────────────────────────────
@@ -610,9 +547,40 @@ public class HeatmapFragment extends Fragment {
     // ─────────────────────────────────────────
     private int getHeatColor(long minutes) {
         if (minutes <= 0)   return COLOR_EMPTY;
-        if (minutes <= 30)  return COLOR_LEVEL1;
-        if (minutes <= 90)  return COLOR_LEVEL2;
-        if (minutes <= 180) return COLOR_LEVEL3;
+        if (minutes <= 15)  return COLOR_LEVEL1;
+        if (minutes <= 30)  return COLOR_LEVEL2;
+        if (minutes <= 45)  return COLOR_LEVEL3;
         return COLOR_LEVEL4;
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        // ✅ Always snap back to current week when fragment is opened
+        if (!monthList.isEmpty()) {
+            SimpleDateFormat monthFmt = new SimpleDateFormat(
+                    "MMMM yyyy", Locale.ENGLISH);
+            SimpleDateFormat dateFmt  = new SimpleDateFormat(
+                    "dd MMM yyyy", Locale.ENGLISH);
+            dateFmt.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+
+            String nowMonth = monthFmt.format(
+                    Calendar.getInstance().getTime());
+            String todayStr = dateFmt.format(
+                    Calendar.getInstance().getTime());
+
+            int monthIdx = monthList.indexOf(nowMonth);
+            if (monthIdx >= 0) {
+                currentMonthIndex = monthIdx;
+                currentMonthWeeks = getWeeksForMonth(nowMonth);
+                currentWeekIndex  = 0;
+                for (int i = 0; i < currentMonthWeeks.size(); i++) {
+                    if (currentMonthWeeks.get(i).contains(todayStr)) {
+                        currentWeekIndex = i;
+                        break;
+                    }
+                }
+                if (getView() != null) refreshMonthView();
+            }
+        }
     }
 }

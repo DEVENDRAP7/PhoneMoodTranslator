@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7E7CE"
+    android:background="#FFFFFF"
     android:scrollbars="none">
 
     <LinearLayout
@@ -20,7 +20,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#5B8A72">
+            app:cardBackgroundColor="#F7E7CE">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -34,14 +34,14 @@
                     android:text="⚙️ Controls"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="#FFFFFF"/>
+                    android:textColor="#000000"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Manage your preferences and limits"
                     android:textSize="12sp"
-                    android:textColor="#D4EDE4"
+                    android:textColor="#000000"
                     android:layout_marginTop="2dp"/>
 
             </LinearLayout>
@@ -55,7 +55,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="#F7E7CE">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -69,14 +69,14 @@
                     android:text="✉️ Future Self Note"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#5B8A72"
+                    android:textColor="#000000"
                     android:layout_marginBottom="8dp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Write a message to yourself. If you cross your usage limit, we'll show you this note."
-                    android:textColor="#888888"
+                    android:textColor="#000000"
                     android:textSize="13sp"
                     android:layout_marginBottom="12dp"/>
 
@@ -101,8 +101,8 @@
                     android:layout_height="wrap_content"
                     android:text="Save Note"
                     android:layout_marginTop="12dp"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#5B8A72"
+                    android:textColor="#000000"
+                    android:backgroundTint="#FED8B1"
                     app:cornerRadius="12dp"/>
 
             </LinearLayout>
@@ -116,7 +116,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="#F7E7CE">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -140,7 +140,7 @@
                     android:layout_marginBottom="12dp"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#EEF5F1">
+                    app:cardBackgroundColor="#FED8B1">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -161,14 +161,14 @@
                                 android:text="Social Media Limit"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
-                                android:textColor="#3D3D3D"/>
+                                android:textColor="#000000"/>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Alert after 2 hours"
                                 android:textSize="12sp"
-                                android:textColor="#888888"/>
+                                android:textColor="#000000"/>
 
                         </LinearLayout>
 
@@ -188,7 +188,7 @@
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
-                    app:cardBackgroundColor="#EEF5F1">
+                    app:cardBackgroundColor="#FED8B1">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -216,7 +216,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Alert after 6 hours"
                                 android:textSize="12sp"
-                                android:textColor="#888888"/>
+                                android:textColor="#000000"/>
 
                         </LinearLayout>
 
@@ -241,7 +241,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="#f7e7ce">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -255,14 +255,14 @@
                     android:text="🎨 App Theme"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#5B8A72"
+                    android:textColor="#000000"
                     android:layout_marginBottom="8dp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Customize the main screen background color."
-                    android:textColor="#888888"
+                    android:textColor="#000000"
                     android:textSize="13sp"
                     android:layout_marginBottom="16dp"/>
 
@@ -277,6 +277,7 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:layout_marginEnd="16dp"
+                        android:clipToOutline="true"
                         android:background="@drawable/circle_preview"/>
 
                     <Button
@@ -285,8 +286,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Pick Color"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#5B8A72"
+                        android:textColor="#000000"
+                        android:backgroundTint="#FED8B1"
                         app:cornerRadius="12dp"/>
 
                 </LinearLayout>
@@ -302,7 +303,7 @@
             android:layout_marginBottom="32dp"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF">
+            app:cardBackgroundColor="#f7e7ce">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -316,14 +317,14 @@
                     android:text="ℹ️ About"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#5B8A72"
+                    android:textColor="#000000"
                     android:layout_marginBottom="8dp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Phone Mood Translator helps you understand your screen time habits through mood-based insights."
-                    android:textColor="#888888"
+                    android:textColor="#000000"
                     android:textSize="13sp"
                     android:layout_marginBottom="16dp"/>
 
@@ -339,7 +340,7 @@
                         android:layout_marginEnd="8dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -353,7 +354,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Version"
                                 android:textSize="11sp"
-                                android:textColor="#888888"/>
+                                android:textColor="#000000"/>
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -361,7 +362,7 @@
                                 android:text="2.0.0"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
-                                android:textColor="#5B8A72"/>
+                                android:textColor="#000000"/>
 
                         </LinearLayout>
 
@@ -373,7 +374,7 @@
                         android:layout_weight="1"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -387,7 +388,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Made with"
                                 android:textSize="11sp"
-                                android:textColor="#888888"/>
+                                android:textColor="#000000"/>
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -395,7 +396,7 @@
                                 android:text="❤️ in India"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
-                                android:textColor="#5B8A72"/>
+                                android:textColor="#000000"/>
 
                         </LinearLayout>
 

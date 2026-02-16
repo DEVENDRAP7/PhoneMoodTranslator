@@ -95,9 +95,21 @@ public class HistoryFragment extends Fragment {
 
         btnToggle.setOnClickListener(v -> {
             if (cvCalendarWrapper.getVisibility() == View.VISIBLE) {
-                cvCalendarWrapper.setVisibility(View.GONE);
+                // ✅ Animate out
+                cvCalendarWrapper.animate()
+                        .alpha(0f)
+                        .setDuration(200)
+                        .withEndAction(() ->
+                                cvCalendarWrapper.setVisibility(View.GONE))
+                        .start();
             } else {
+                // ✅ Animate in
+                cvCalendarWrapper.setAlpha(0f);
                 cvCalendarWrapper.setVisibility(View.VISIBLE);
+                cvCalendarWrapper.animate()
+                        .alpha(1f)
+                        .setDuration(300)
+                        .start();
                 updateCalendarGrid();
             }
         });
@@ -116,26 +128,49 @@ public class HistoryFragment extends Fragment {
     }
 
     private void updateCalendarGrid() {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
-        tvCurrentMonth.setText(sdf.format(currentCalendarInstance.getTime()));
+        SimpleDateFormat sdf = new SimpleDateFormat(
+                "MMMM yyyy", Locale.ENGLISH); // ✅ Locale.ENGLISH
+        tvCurrentMonth.setText(sdf.format(
+                currentCalendarInstance.getTime()));
 
         final int month = currentCalendarInstance.get(Calendar.MONTH) + 1;
-        final int year = currentCalendarInstance.get(Calendar.YEAR);
+        final int year  = currentCalendarInstance.get(Calendar.YEAR);
 
-        final Calendar tempCal = (Calendar) currentCalendarInstance.clone();
+        final Calendar tempCal =
+                (Calendar) currentCalendarInstance.clone();
         tempCal.set(Calendar.DAY_OF_MONTH, 1);
 
         int dayOfWeek = tempCal.get(Calendar.DAY_OF_WEEK);
-        final int firstDayOfWeek = (dayOfWeek == Calendar.SUNDAY) ? 6 : dayOfWeek - 2;
-        final int daysInMonth = tempCal.getActualMaximum(Calendar.DAY_OF_MONTH);
+        final int firstDayOfWeek =
+                (dayOfWeek == Calendar.SUNDAY) ? 6 : dayOfWeek - 2;
+        final int daysInMonth =
+                tempCal.getActualMaximum(Calendar.DAY_OF_MONTH);
 
         new Thread(() -> {
             AppDatabase db = AppDatabase.getDatabase(getContext());
-            List<DailyStats> monthlyStats = db.statsDao().getStatsForMonth(month, year);
+            List<DailyStats> monthlyStats =
+                    db.statsDao().getStatsForMonth(month, year);
 
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (getContext() != null) {
-                    CalendarAdapter calAdapter = new CalendarAdapter(monthlyStats, daysInMonth, firstDayOfWeek);
+                    CalendarAdapter calAdapter = new CalendarAdapter(
+                            monthlyStats, daysInMonth, firstDayOfWeek);
+
+                    // ✅ Wire tap to detail popup
+                    calAdapter.setOnDayClickListener(stats -> {
+                        // Convert DailyStats → MoodHistoryItem
+                        MoodHistoryItem item = new MoodHistoryItem(
+                                stats.date,
+                                stats.moodEmoji,
+                                stats.moodTitle,
+                                formatTime(stats.totalUsageTime),
+                                stats.totalUsageTime,
+                                stats.topAppsJson,
+                                stats.selfNote
+                        );
+                        showDetailDialog(item);
+                    });
+
                     rvCalendar.setAdapter(calAdapter);
                 }
             });

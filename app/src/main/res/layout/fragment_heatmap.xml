@@ -31,6 +31,7 @@
                 android:textColor="#000000"/>
 
             <!-- Month Navigation -->
+            <!-- Month Navigation -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -38,15 +39,14 @@
                 android:gravity="center_vertical"
                 android:layout_marginTop="12dp">
 
-                <TextView
+                <ImageButton
                     android:id="@+id/tvPrevMonth"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:text="‹"
-                    android:textSize="24sp"
-                    android:textColor="#000000"
-                    android:gravity="center"
-                    android:background="@drawable/tab_selected_bg"/>
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    android:background="@drawable/tab_selected_bg"
+                    android:padding="8dp"
+                    android:tint="#000000"/>
 
                 <TextView
                     android:id="@+id/tvCurrentMonth"
@@ -59,15 +59,52 @@
                     android:textColor="#000000"
                     android:gravity="center"/>
 
-                <TextView
+                <ImageButton
                     android:id="@+id/tvNextMonth"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:text="›"
-                    android:textSize="24sp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_media_next"
+                    android:background="@drawable/tab_selected_bg"
+                    android:padding="8dp"
+                    android:tint="#000000"/>
+
+            </LinearLayout>
+
+            <!-- Week Navigation -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <ImageButton
+                    android:id="@+id/tvPrevWeek"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    android:background="@drawable/tab_selected_bg"
+                    android:padding="8dp"
+                    android:tint="#000000"/>
+
+                <TextView
+                    android:id="@+id/tvCurrentWeek"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="9 Feb – 15 Feb"
+                    android:textSize="13sp"
                     android:textColor="#000000"
-                    android:gravity="center"
-                    android:background="@drawable/tab_selected_bg"/>
+                    android:gravity="center"/>
+
+                <ImageButton
+                    android:id="@+id/tvNextWeek"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_media_next"
+                    android:background="@drawable/tab_selected_bg"
+                    android:padding="8dp"
+                    android:tint="#000000"/>
 
             </LinearLayout>
 
@@ -87,7 +124,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- ── HEATMAP CARD ── -->
+            <!-- ── SAMSUNG HEATMAP CARD ── -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -104,230 +141,7 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Day labels + Scrollable grid -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <!-- Day Labels Column -->
-                        <LinearLayout
-                            android:id="@+id/dayLabelsColumn"
-                            android:layout_width="24dp"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginTop="20dp"/>
-
-                        <!-- Horizontal Scroll -->
-                        <HorizontalScrollView
-                            android:id="@+id/heatmapScrollView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:scrollbars="none">
-
-                            <LinearLayout
-                                android:id="@+id/heatmapWrapper"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical">
-
-                                <!-- Month Labels -->
-                                <LinearLayout
-                                    android:id="@+id/monthLabelsRow"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="20dp"
-                                    android:orientation="horizontal"/>
-
-                                <!-- Grid -->
-                                <LinearLayout
-                                    android:id="@+id/heatmapGrid"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="horizontal"/>
-
-                            </LinearLayout>
-
-                        </HorizontalScrollView>
-
-                    </LinearLayout>
-
-                    <!-- ── LEGEND ── -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="12dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Less "
-                            android:textSize="11sp"
-                            android:textColor="#AAAAAA"/>
-
-                        <View android:layout_width="12dp" android:layout_height="12dp"
-                            android:background="#E8E8E8" android:layout_marginEnd="3dp"/>
-                        <View android:layout_width="12dp" android:layout_height="12dp"
-                            android:background="#FFE0B2" android:layout_marginEnd="3dp"/>
-                        <View android:layout_width="12dp" android:layout_height="12dp"
-                            android:background="#FFB74D" android:layout_marginEnd="3dp"/>
-                        <View android:layout_width="12dp" android:layout_height="12dp"
-                            android:background="#FF8C00" android:layout_marginEnd="3dp"/>
-                        <View android:layout_width="12dp" android:layout_height="12dp"
-                            android:background="#E65100" android:layout_marginEnd="3dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text=" More"
-                            android:textSize="11sp"
-                            android:textColor="#AAAAAA"/>
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- ── EXPANDED WEEK VIEW ── -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/expandedWeekCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="#FFFFFF">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <!-- Week Title -->
-                    <TextView
-                        android:id="@+id/tvWeekTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Week of 3 Feb - 9 Feb"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1c1554"
-                        android:layout_marginBottom="16dp"/>
-
-                    <!-- Week Summary Row -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="20dp">
-
-                        <!-- Total Time -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="0dp"
-                            android:layout_height="70dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#FFF3E0">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:padding="8dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="⏱"
-                                    android:textSize="18sp"/>
-
-                                <TextView
-                                    android:id="@+id/tvWeekTotal"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="--h --m"
-                                    android:textSize="13sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#1c1554"
-                                    android:gravity="center"/>
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Total"
-                                    android:textSize="11sp"
-                                    android:textColor="#AAAAAA"/>
-
-                            </LinearLayout>
-
-                        </androidx.cardview.widget.CardView>
-
-                        <!-- Most Used App -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="0dp"
-                            android:layout_height="70dp"
-                            android:layout_weight="1"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="0dp"
-                            app:cardBackgroundColor="#FFF3E0">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical"
-                                android:gravity="center"
-                                android:padding="8dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="🏆"
-                                    android:textSize="18sp"/>
-
-                                <TextView
-                                    android:id="@+id/tvWeekTopApp"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="--"
-                                    android:textSize="12sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#1c1554"
-                                    android:gravity="center"
-                                    android:maxLines="1"
-                                    android:ellipsize="end"/>
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Top App"
-                                    android:textSize="11sp"
-                                    android:textColor="#AAAAAA"/>
-
-                            </LinearLayout>
-
-                        </androidx.cardview.widget.CardView>
-
-                    </LinearLayout>
-
-                    <!-- ── SAMSUNG STYLE HOURLY HEATMAP ── -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Hourly Usage Pattern"
-                        android:textSize="13sp"
-                        android:textColor="#888888"
-                        android:layout_marginBottom="8dp"/>
-
-                    <!-- Hour labels row at top -->
+                    <!-- Hour labels -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -382,21 +196,20 @@
 
                     </LinearLayout>
 
-                    <!-- Samsung Grid Container — rows added programmatically -->
+                    <!-- Samsung Grid -->
                     <LinearLayout
                         android:id="@+id/samsungHeatmapGrid"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginBottom="16dp"/>
+                        android:layout_marginBottom="12dp"/>
 
                     <!-- Legend -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
+                        android:gravity="center_vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -422,6 +235,132 @@
                             android:text=" More"
                             android:textSize="11sp"
                             android:textColor="#AAAAAA"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- ── WEEK SUMMARY CARD ── -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFFFF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Week Summary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1c1554"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- Total + Top App -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="70dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="8dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FFF3E0">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="8dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⏱"
+                                    android:textSize="18sp"/>
+
+                                <TextView
+                                    android:id="@+id/tvWeekTotal"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--h --m"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#1c1554"
+                                    android:gravity="center"/>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Total"
+                                    android:textSize="11sp"
+                                    android:textColor="#AAAAAA"/>
+
+                            </LinearLayout>
+
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="0dp"
+                            android:layout_height="70dp"
+                            android:layout_weight="1"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FFF3E0">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical"
+                                android:gravity="center"
+                                android:padding="8dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🏆"
+                                    android:textSize="18sp"/>
+
+                                <TextView
+                                    android:id="@+id/tvWeekTopApp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#1c1554"
+                                    android:gravity="center"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"/>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Top App"
+                                    android:textSize="11sp"
+                                    android:textColor="#AAAAAA"/>
+
+                            </LinearLayout>
+
+                        </androidx.cardview.widget.CardView>
 
                     </LinearLayout>
 
@@ -452,7 +391,7 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- ── STATS CARD ── -->
+            <!-- ── ALL TIME STATS CARD ── -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -478,7 +417,6 @@
                         android:textColor="#1c1554"
                         android:layout_marginBottom="16dp"/>
 
-                    <!-- Stat Row 1 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

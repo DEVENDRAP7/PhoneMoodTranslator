@@ -4,32 +4,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardDayRoot"
     android:layout_width="match_parent"
-    android:layout_height="90dp"
-    android:layout_margin="3dp"
-    app:cardCornerRadius="14dp"
+    android:layout_height="80dp"
+    android:layout_margin="2dp"
+    app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:strokeWidth="1.5dp"
-    app:strokeColor="#F0F0F0"> <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="4dp">
+    app:strokeWidth="1dp"
+    app:strokeColor="#F0F0F0">
 
-    <TextView
-        android:id="@+id/tvDateNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="14"
-        android:textSize="11sp"
-        android:textColor="#BDBDBD"
-        android:fontFamily="sans-serif-medium" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="4dp">
 
-    <com.devendrap7.phonemoodtranslator.views.MoodPetView
-        android:id="@+id/calendarPet"
-        android:layout_width="55dp"
-        android:layout_height="55dp"
-        android:layout_marginTop="2dp" />
+        <TextView
+            android:id="@+id/tvDateNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="14"
+            android:textSize="10sp"
+            android:textColor="#BDBDBD"
+            android:fontFamily="sans-serif-medium"/>
 
-</LinearLayout>
+        <com.devendrap7.phonemoodtranslator.views.MoodPetView
+            android:id="@+id/calendarPet"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="2dp"/>
+
+    </LinearLayout>
+
 </com.google.android.material.card.MaterialCardView>

@@ -48,7 +48,7 @@ import yuku.ambilwarna.AmbilWarnaDialog;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnStart, btnHistory;
-    private FloatingActionButton fabColorPicker;
+
     private View rootLayout;
     private TextView tvTitle, tvSubtitle, tvEmoji, tvSwipeHint;
 
@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
     private MoodViewModel moodViewModel;
     private GestureDetector gestureDetector;
     private Map<String, String> installedAppsCache = new HashMap<>();
-    private ImageButton imgBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         initializeViews();
-        setupTheme();
+        //setupTheme();
         cacheInstalledApps();
         setupClickListeners();
 
@@ -102,20 +101,15 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
         }
-
-//        imgBtn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Intent intent = new Intent(MainActivity.this, InfoActivity.class);
-//                startActivity(intent);
-//
-//                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-//            }
-//        });
     }
     @Override
     protected void onResume() {
         super.onResume();
+        SharedPreferences prefs = getSharedPreferences(
+                "app_prefs", MODE_PRIVATE);
+        mDefaultColor = prefs.getInt("bg_color",
+                Color.parseColor("#4A148C"));
+        applyTheme(mDefaultColor);
         // Peek at the data the moment the app comes to the foreground
         if (hasUsageAccessPermission()) {
             moodViewModel.readUsageDataAndRefresh(this);
@@ -125,20 +119,24 @@ public class MainActivity extends AppCompatActivity {
     private void initializeViews() {
         btnStart = findViewById(R.id.btnStart);
         btnHistory = findViewById(R.id.btnHistory);
-        fabColorPicker = findViewById(R.id.fabColorPicker);
         rootLayout = findViewById(R.id.mainRootLayout);
         tvTitle = findViewById(R.id.tvTitle);
         tvSubtitle = findViewById(R.id.tvSubtitle);
         tvEmoji = findViewById(R.id.tvEmoji);
         tvSwipeHint = findViewById(R.id.tvSwipeHint);
-        imgBtn=findViewById(R.id.btnMainInfo);
-    }
 
-    private void setupTheme() {
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        mDefaultColor = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
+        SharedPreferences prefs = getSharedPreferences(
+                "app_prefs", MODE_PRIVATE);
+        mDefaultColor = prefs.getInt("bg_color",
+                Color.parseColor("#4A148C"));
         applyTheme(mDefaultColor);
     }
+
+//    private void setupTheme() {
+//        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+//        mDefaultColor = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
+//        applyTheme(mDefaultColor);
+//    }
 
 
     private void setupClickListeners() {
@@ -148,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, HistoryActivity.class));
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
-        fabColorPicker.setOnClickListener(v -> openColorPicker());
     }
     private void applyTheme(int themeColor) {
         if (rootLayout != null) rootLayout.setBackgroundColor(themeColor);
@@ -186,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
             public void onOk(AmbilWarnaDialog dialog, int color) {
                 mDefaultColor = color;
                 saveTheme(color);
-                applyTheme(color);
+                //applyTheme(color);
             }
         });
         colorPicker.show();

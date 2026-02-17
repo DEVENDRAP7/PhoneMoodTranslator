@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Keystore files — NEVER commit these!
+*.jks
+*.keystore
+*.p12
+
+# Release build outputs
+/app/release/
+release/
+
+# Signing config if in separate file
+keystore.properties

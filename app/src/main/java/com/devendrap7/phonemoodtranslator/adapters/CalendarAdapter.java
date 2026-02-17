@@ -94,7 +94,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.Calend
                 holder.cardDayRoot.setStrokeColor(
                         Color.parseColor("#F0F0F0"));
                 holder.tvDate.setTextColor(Color.parseColor("#CCCCCC"));
-                holder.petView.setLoading(true);
+                holder.petView.setVisibility(View.INVISIBLE);
                 holder.itemView.setOnClickListener(null);
             }
         }

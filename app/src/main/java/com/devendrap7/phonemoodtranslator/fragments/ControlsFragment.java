@@ -1,13 +1,17 @@
 package com.devendrap7.phonemoodtranslator.fragments;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.SpannableString;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -35,6 +39,7 @@ public class ControlsFragment extends Fragment {
     private View viewColorPreview;
     private Button btnPickColor;
     private int currentColor;
+    private TextView tvAboutDesc;
 
     @Nullable
     @Override
@@ -50,6 +55,63 @@ public class ControlsFragment extends Fragment {
         switchTotalLimit  = view.findViewById(R.id.switchTotalLimit);
         viewColorPreview  = view.findViewById(R.id.viewColorPreview);
         btnPickColor      = view.findViewById(R.id.btnPickColor);
+        tvAboutDesc       = view.findViewById(R.id.tvAboutDesc);
+
+        String desc = "Phone Mood Translator helps you understand your screen time habits through mood-based insights. ";
+
+// ✅ Build spannable with clickable "Read More →" at end
+        SpannableString spannable = new SpannableString(desc + "Read More →");
+
+        spannable.setSpan(new android.text.style.ForegroundColorSpan(
+                        Color.parseColor("#1c1554")),
+                desc.length(), spannable.length(),
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        spannable.setSpan(new android.text.style.StyleSpan(
+                        android.graphics.Typeface.BOLD),
+                desc.length(), spannable.length(),
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        spannable.setSpan(new android.text.style.ClickableSpan() {
+                              @Override
+                              public void onClick(@NonNull View widget) {
+                                  Dialog dialog = new Dialog(requireContext(),
+                                          android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
+                                  dialog.setContentView(R.layout.dialog_about_fullscreen);
+                                  dialog.findViewById(R.id.btnCloseAbout)
+                                          .setOnClickListener(cv -> dialog.dismiss());
+
+                                  dialog.findViewById(R.id.btnRateApp)
+                                          .setOnClickListener(rv -> {
+                                              String packageName = requireContext().getPackageName();
+                                              try {
+                                                  // ✅ Opens Play Store app directly
+                                                  startActivity(new Intent(Intent.ACTION_VIEW,
+                                                          android.net.Uri.parse(
+                                                                  "market://details?id=" + packageName)));
+                                              } catch (android.content.ActivityNotFoundException e) {
+                                                  // ✅ Fallback to browser if Play Store not installed
+                                                  startActivity(new Intent(Intent.ACTION_VIEW,
+                                                          android.net.Uri.parse(
+                                                                  "https://play.google.com/store/apps/details?id="
+                                                                          + packageName)));
+                                              }
+                                          });
+                                  dialog.show();
+                              }
+
+                              @Override
+                              public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                                  ds.setColor(Color.parseColor("#1c1554"));
+                                  ds.setUnderlineText(false); // ✅ no underline
+                              }
+                          }, desc.length(), spannable.length(),
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        tvAboutDesc.setText(spannable);
+        tvAboutDesc.setMovementMethod(
+                android.text.method.LinkMovementMethod.getInstance());
+        tvAboutDesc.setHighlightColor(Color.TRANSPARENT);
 
         SharedPreferences prefs = requireContext()
                 .getSharedPreferences("app_prefs", Context.MODE_PRIVATE);

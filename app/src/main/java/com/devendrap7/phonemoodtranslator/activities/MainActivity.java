@@ -16,12 +16,10 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.devendrap7.phonemoodtranslator.models.MoodResult;
@@ -30,7 +28,6 @@ import com.devendrap7.phonemoodtranslator.viewmodels.MoodViewModel;
 import com.devendrap7.phonemoodtranslator.workers.UsageWorker;
 import com.devendrap7.phonemoodtranslator.database.AppDatabase;
 import com.devendrap7.phonemoodtranslator.database.DailyStats;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
@@ -131,14 +128,6 @@ public class MainActivity extends AppCompatActivity {
                 Color.parseColor("#4A148C"));
         applyTheme(mDefaultColor);
     }
-
-//    private void setupTheme() {
-//        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-//        mDefaultColor = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
-//        applyTheme(mDefaultColor);
-//    }
-
-
     private void setupClickListeners() {
         btnStart.setOnClickListener(v -> handleStartButtonClick());
         btnHistory.setOnClickListener(v -> {
@@ -171,26 +160,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean isColorDark(int color) {
         double darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
         return darkness >= 0.5;
-    }
-
-     
-
-    private void openColorPicker() {
-        AmbilWarnaDialog colorPicker = new AmbilWarnaDialog(this, mDefaultColor, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-            @Override
-            public void onCancel(AmbilWarnaDialog dialog) {}
-            @Override
-            public void onOk(AmbilWarnaDialog dialog, int color) {
-                mDefaultColor = color;
-                saveTheme(color);
-                //applyTheme(color);
-            }
-        });
-        colorPicker.show();
-    }
-
-    private void saveTheme(int color) {
-        getSharedPreferences("app_prefs", MODE_PRIVATE).edit().putInt("bg_color", color).apply();
     }
 
     private void cacheInstalledApps() {

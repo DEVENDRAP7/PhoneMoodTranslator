@@ -142,7 +142,7 @@
                         android:layout_marginBottom="8dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -176,7 +176,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="The app works 100% offline. No data is ever sent to any server."
                                     android:textSize="12sp"
-                                    android:textColor="#888888"/>
+                                    android:textColor="#000000"/>
 
                             </LinearLayout>
 
@@ -191,7 +191,7 @@
                         android:layout_marginBottom="8dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -225,7 +225,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="All your usage history is stored locally in an encrypted database on your phone only."
                                     android:textSize="12sp"
-                                    android:textColor="#888888"/>
+                                    android:textColor="#000000"/>
 
                             </LinearLayout>
 
@@ -240,7 +240,7 @@
                         android:layout_marginBottom="8dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -274,7 +274,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="We do not use any analytics SDK, advertising SDK or third party tracking tools."
                                     android:textSize="12sp"
-                                    android:textColor="#888888"/>
+                                    android:textColor="#000000"/>
 
                             </LinearLayout>
 
@@ -288,7 +288,7 @@
                         android:layout_height="wrap_content"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -322,7 +322,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="Uninstalling the app permanently deletes all your data. No backups anywhere."
                                     android:textSize="12sp"
-                                    android:textColor="#888888"/>
+                                    android:textColor="#000000"/>
 
                             </LinearLayout>
 
@@ -365,7 +365,7 @@
                         android:layout_marginBottom="8dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -387,7 +387,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="This is the core permission that powers the entire app. It allows us to read which apps you used today and for how long — exactly like Android's built-in Digital Wellbeing.\n\nWe ONLY read app names and durations. We cannot read your messages, photos, calls or any personal content."
                                 android:textSize="12sp"
-                                android:textColor="#888888"
+                                android:textColor="#000000"
                                 android:lineSpacingMultiplier="1.4"/>
 
                         </LinearLayout>
@@ -400,7 +400,7 @@
                         android:layout_height="wrap_content"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -422,7 +422,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Used only to send you gentle reminders when you exceed your usage limits. You can disable notifications at any time from Android Settings."
                                 android:textSize="12sp"
-                                android:textColor="#888888"
+                                android:textColor="#000000"
                                 android:lineSpacingMultiplier="1.4"/>
 
                         </LinearLayout>
@@ -460,7 +460,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Every time you tap Translate, we analyze 3 signals from your day:"
-                        android:textColor="#555555"
+                        android:textColor="#000000"
                         android:textSize="13sp"
                         android:layout_marginBottom="12dp"/>
 
@@ -471,7 +471,7 @@
                         android:layout_marginBottom="8dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -484,8 +484,9 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="⏱"
-                                android:textSize="20sp"
-                                android:layout_marginEnd="12dp"/>
+                                android:textSize="25sp"
+                                android:layout_marginEnd="12dp"
+                                android:paddingRight="5dp"/>
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -505,7 +506,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="How many total minutes you used your phone today"
                                     android:textSize="12sp"
-                                    android:textColor="#888888"/>
+                                    android:textColor="#555555"/>
 
                             </LinearLayout>
 
@@ -520,7 +521,7 @@
                         android:layout_marginBottom="8dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -554,7 +555,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="How many times you jumped between different apps"
                                     android:textSize="12sp"
-                                    android:textColor="#888888"/>
+                                    android:textColor="#555555"/>
 
                             </LinearLayout>
 
@@ -569,7 +570,7 @@
                         android:layout_marginBottom="12dp"
                         app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -603,7 +604,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="Whether you used your phone late at night (11PM - 4AM)"
                                     android:textSize="12sp"
-                                    android:textColor="#888888"/>
+                                    android:textColor="#555555"/>
 
                             </LinearLayout>
 
@@ -615,7 +616,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="These 3 signals combine to produce one of 11 unique moods — from 🌿 Unplugged to 🤯 Overdose!"
-                        android:textColor="#555555"
+                        android:textColor="#000000"
                         android:textSize="13sp"
                         android:lineSpacingMultiplier="1.4"/>
 
@@ -652,7 +653,7 @@
                         android:layout_marginBottom="16dp"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp"
-                        app:cardBackgroundColor="#EEF5F1">
+                        app:cardBackgroundColor="#FED8B1">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -718,7 +719,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Your feedback is always appreciated!"
-                        android:textColor="#888888"
+                        android:textColor="#555555"
                         android:textSize="13sp"
                         android:layout_marginBottom="12dp"/>
 
@@ -728,7 +729,7 @@
                         android:layout_height="wrap_content"
                         android:text="⭐ Rate on Play Store"
                         android:textColor="#000000"
-                        android:backgroundTint="#EEF5F1"
+                        android:backgroundTint="#FED8B1"
                         app:cornerRadius="12dp"/>
 
                 </LinearLayout>

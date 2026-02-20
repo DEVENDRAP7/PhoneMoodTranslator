@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="#F7E7CE">
+
+    <!-- Mood Pet -->
+    <com.devendrap7.phonemoodtranslator.views.MoodPetView
+        android:id="@+id/onboardingPet"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_marginBottom="48dp"/>
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Welcome to Phone Mood Translator"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#1c1554"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Description -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Your digital wellbeing companion that translates your screen time into moods through a living, breathing pet.\n\nEvery time you tap Translate, your pet reacts to your habits — from 🌿 Unplugged to 🤯 Overdose!"
+        android:textSize="16sp"
+        android:textColor="#555555"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.5"
+        android:layout_marginBottom="48dp"/>
+
+    <!-- Get Started Button -->
+    <Button
+        android:id="@+id/btnGetStarted"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Started"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#1c1554"
+        app:cornerRadius="16dp"/>
+
+</LinearLayout>

@@ -3,6 +3,7 @@ package com.devendrap7.phonemoodtranslator.activities;
 import android.animation.ValueAnimator;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
@@ -39,6 +40,13 @@ public class HistoryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
+        // ✅ Make status bar match your app background
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(Color.parseColor("#F7E7CE"));
+            // ✅ Make status bar icons dark (since background is light)
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
 
         // 1. Initialize Views
         viewPager = findViewById(R.id.viewPager);

@@ -31,14 +31,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PhoneMoodTranslator">
 
-        <activity android:name=".activities.DisclaimerActivity"
+        <receiver
+            android:name=".receivers.BootReceiver"
+            android:enabled="true"
             android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".activities.OnboardingActivity"
+            android:exported="true"
+            android:theme="@style/Theme.PhoneMoodTranslator">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".activities.MainActivity" android:exported="false"/>
         <activity android:name=".activities.HistoryActivity" android:exported="false"/>
         <activity android:name=".activities.ResultActivity" android:exported="false"/>

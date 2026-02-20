@@ -168,12 +168,15 @@ public class UsageWorker extends Worker {
         DailyStats stats = db.statsDao().getStatsByDate(today);
 
         if (stats != null) {
-            // ✅ Update existing — preserves moodEmoji, moodTitle, topAppsJson
             stats.totalUsageTime = totalTime;
             stats.month          = month;
             stats.year           = year;
-            stats.dayOfMonth     = currentDay;  // ✅
-            stats.dateTimestamp  = timestamp;   // ✅
+            stats.dayOfMonth     = currentDay;
+            stats.dateTimestamp  = timestamp;
+            // ✅ Don't overwrite hourlyDataJson if it already exists
+            if (stats.hourlyDataJson == null || stats.hourlyDataJson.isEmpty()) {
+                stats.hourlyDataJson = "[]"; // Empty array placeholder
+            }
             db.statsDao().update(stats);
         } else {
             // ✅ Insert skeleton row

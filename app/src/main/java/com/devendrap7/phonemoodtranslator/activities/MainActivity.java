@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.GestureDetector;
@@ -92,6 +93,34 @@ public class MainActivity extends AppCompatActivity {
                 androidx.work.ExistingPeriodicWorkPolicy.KEEP,
                 usageWorkRequest
         );
+        // After WorkManager scheduling
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String packageName = getPackageName();
+            android.os.PowerManager pm = (android.os.PowerManager)
+                    getSystemService(Context.POWER_SERVICE);
+
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
+                // Show one-time dialog asking user to disable battery optimization
+                SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+                boolean askedBefore = prefs.getBoolean("battery_opt_asked", false);
+
+                if (!askedBefore) {
+                    new androidx.appcompat.app.AlertDialog.Builder(this)
+                            .setTitle("Enable Background Tracking")
+                            .setMessage("To track your usage even when the app is closed, please disable battery optimization for this app.")
+                            .setPositiveButton("Settings", (dialog, which) -> {
+                                Intent intent = new Intent(
+                                        android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                                intent.setData(android.net.Uri.parse("package:" + packageName));
+                                startActivity(intent);
+                            })
+                            .setNegativeButton("Later", null)
+                            .show();
+
+                    prefs.edit().putBoolean("battery_opt_asked", true).apply();
+                }
+            }
+        }
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {

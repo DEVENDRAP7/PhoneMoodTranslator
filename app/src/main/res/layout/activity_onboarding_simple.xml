@@ -20,7 +20,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Welcome to Phone Mood Translator"
+        android:text="Welcome to Digi Pulse"
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="#1c1554"

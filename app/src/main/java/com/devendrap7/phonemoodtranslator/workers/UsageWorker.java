@@ -6,6 +6,8 @@ import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -17,6 +19,7 @@ import com.devendrap7.phonemoodtranslator.database.AppDatabase;
 import com.devendrap7.phonemoodtranslator.database.DailyStats;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -59,71 +62,118 @@ public class UsageWorker extends Worker {
         Context context = getApplicationContext();
         SharedPreferences prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
 
-        // Fetch User Settings
         boolean alertSocialEnabled = prefs.getBoolean("limit_social_enabled", true);
         boolean alertTotalEnabled = prefs.getBoolean("limit_total_enabled", true);
         float limitTotal = prefs.getFloat("limit_total_hours", (float) DEFAULT_LIMIT_TOTAL);
         float limitSocial = prefs.getFloat("limit_social_hours", (float) DEFAULT_LIMIT_SOCIAL);
         long lastAlertTime = prefs.getLong("last_alert_timestamp", 0);
 
-        // 1. Midnight Calculation (IST)
         Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         int currentMonth = calendar.get(Calendar.MONTH) + 1;
         int currentYear = calendar.get(Calendar.YEAR);
-        calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
 
         long startTime = calendar.getTimeInMillis();
         long endTime = System.currentTimeMillis();
 
-        // 2. Fetch Usage Events
         UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
         UsageEvents events = usm.queryEvents(startTime, endTime);
 
-        // Map to store time per package
-        Map<String, Long> appDurations = calculateAppDurations(events, startTime, endTime);
+        // ✅ Create hourly array
+        long[] hourlyMillis = new long[24];
 
-        // 3. Calculate Totals
+        Map<String, Long> appDurations = calculateAppDurations(events, startTime, endTime, hourlyMillis);
+
+        List<AppUsageInfo> appList = new ArrayList<>();
         long totalUsageMillis = 0;
         long socialUsageMillis = 0;
 
         for (Map.Entry<String, Long> entry : appDurations.entrySet()) {
-            totalUsageMillis += entry.getValue();
-            if (SOCIAL_PACKAGES.contains(entry.getKey())) {
-                socialUsageMillis += entry.getValue();
+            String pkg = entry.getKey();
+            long duration = entry.getValue();
+
+            totalUsageMillis += duration;
+
+            if (SOCIAL_PACKAGES.contains(pkg)) {
+                socialUsageMillis += duration;
+            }
+
+            if (duration > 1000) {
+                String appName = getAppName(context, pkg);
+                appList.add(new AppUsageInfo(appName, duration));
             }
         }
+
+        appList.sort((a, b) -> Long.compare(b.usageTime, a.usageTime));
+        String topAppsJson = new com.google.gson.Gson().toJson(appList);
+
+        // ✅ Convert hourlyMillis to hourlyMinutes JSON
+        long[] hourlyMinutes = new long[24];
+        for (int i = 0; i < 24; i++) {
+            hourlyMinutes[i] = hourlyMillis[i] / 60000;
+        }
+        String hourlyDataJson = new com.google.gson.Gson().toJson(hourlyMinutes);
 
         double totalHours = totalUsageMillis / (1000.0 * 60 * 60);
         double socialHours = socialUsageMillis / (1000.0 * 60 * 60);
 
-        // 4. Update Database for the Pie Chart/History
-        updateDatabase(context, totalUsageMillis, currentMonth, currentYear);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-        sdf.setTimeZone(TimeZone.getDefault());
-        String todayDate = sdf.format(Calendar.getInstance(
-                TimeZone.getDefault()).getTime());
+        // ✅ Pass hourlyDataJson to database
+        updateDatabase(context, totalUsageMillis, currentMonth, currentYear,
+                topAppsJson, hourlyDataJson);
 
-        AppDatabase db = AppDatabase.getDatabase(context);
-        DailyStats fresh = db.statsDao().getStatsByDate(todayDate);
-
-        // 5. Enforcement Logic (Alerts)
+        // Alerts
         if (System.currentTimeMillis() - lastAlertTime >= ALERT_COOLDOWN) {
-            
-            // Check Social Limit first (usually more urgent)
             if (alertSocialEnabled && socialHours > limitSocial) {
-                sendAlert("📱 Social Media Warning", "You've spent " + String.format("%.1f", socialHours) + "h on social apps. Your pet is getting worried!");
-                prefs.edit().putLong("last_alert_timestamp", System.currentTimeMillis()).apply();
-            } 
-            // Check Total Limit
-            else if (alertTotalEnabled && totalHours > limitTotal) {
-                sendAlert("⚠️ High Screen Time", "Total usage is " + String.format("%.1f", totalHours) + "h. Time for a real-world break?");
-                prefs.edit().putLong("last_alert_timestamp", System.currentTimeMillis()).apply();
+                sendAlert("📱 Social Media Warning",
+                        "You've spent " + String.format("%.1f", socialHours) +
+                                "h on social apps. Your pet is getting worried!");
+                prefs.edit().putLong("last_alert_timestamp",
+                        System.currentTimeMillis()).apply();
+            } else if (alertTotalEnabled && totalHours > limitTotal) {
+                sendAlert("⚠️ High Screen Time",
+                        "Total usage is " + String.format("%.1f", totalHours) +
+                                "h. Time for a real-world break?");
+                prefs.edit().putLong("last_alert_timestamp",
+                        System.currentTimeMillis()).apply();
             }
         }
     }
 
-    private Map<String, Long> calculateAppDurations(UsageEvents events, long startTime, long endTime) {
+    // ✅ Add this class inside UsageWorker
+    public static class AppUsageInfo {
+        public String name;
+        public long usageTime;
+
+        public AppUsageInfo(String name, long usageTime) {
+            this.name = name;
+            this.usageTime = usageTime;
+        }
+    }
+
+    // ✅ Add this method
+    private String getAppName(Context context, String packageName) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            ApplicationInfo info = pm.getApplicationInfo(packageName, 0);
+            return pm.getApplicationLabel(info).toString();
+        } catch (Exception e) {
+            // Fallback formatting
+            String[] parts = packageName.split("\\.");
+            if (parts.length > 1) {
+                String name = parts[parts.length - 1];
+                return name.substring(0, 1).toUpperCase() + name.substring(1);
+            }
+            return packageName;
+        }
+    }
+
+    private Map<String, Long> calculateAppDurations(UsageEvents events,
+                                                    long startTime,
+                                                    long endTime,
+                                                    long[] hourlyMillis) {  // ✅ new param
         Map<String, Long> durations = new HashMap<>();
         Map<String, Long> startTimes = new HashMap<>();
         UsageEvents.Event event = new UsageEvents.Event();
@@ -140,70 +190,94 @@ public class UsageWorker extends Worker {
                 startTimes.put(pkg, time);
             } else if (type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                 if (startTimes.containsKey(pkg)) {
-                    long duration = time - Math.max(startTime, startTimes.get(pkg));
+                    long start = Math.max(startTime, startTimes.get(pkg));
+                    long duration = time - start;
                     durations.put(pkg, durations.getOrDefault(pkg, 0L) + duration);
+
+                    // ✅ Distribute to hourly buckets
+                    distributeToHourlyBuckets(hourlyMillis, start, time);
+
                     startTimes.remove(pkg);
                 }
             }
         }
-        
-        // Handle apps currently in foreground
+
+        // Handle apps still in foreground
         for (String pkg : startTimes.keySet()) {
-            long duration = endTime - Math.max(startTime, startTimes.get(pkg));
+            long start = Math.max(startTime, startTimes.get(pkg));
+            long duration = endTime - start;
             durations.put(pkg, durations.getOrDefault(pkg, 0L) + duration);
+
+            // ✅ Distribute to hourly buckets
+            distributeToHourlyBuckets(hourlyMillis, start, endTime);
         }
+
         return durations;
     }
-
-    private void updateDatabase(Context context, long totalTime, int month, int year) {
+    private void updateDatabase(Context context, long totalTime,
+                                int month, int year,
+                                String topAppsJson,
+                                String hourlyDataJson) {  // ✅ new param
         AppDatabase db = AppDatabase.getDatabase(context);
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
         sdf.setTimeZone(TimeZone.getDefault());
         Calendar cal = Calendar.getInstance(TimeZone.getDefault());
         String today = sdf.format(cal.getTime());
 
-        int currentDay   = cal.get(Calendar.DAY_OF_MONTH); // ✅
-        long timestamp   = cal.getTimeInMillis();           // ✅
+        int currentDay = cal.get(Calendar.DAY_OF_MONTH);
+        long timestamp = cal.getTimeInMillis();
 
         DailyStats stats = db.statsDao().getStatsByDate(today);
 
         if (stats != null) {
             stats.totalUsageTime = totalTime;
-            stats.month          = month;
-            stats.year           = year;
-            stats.dayOfMonth     = currentDay;
-            stats.dateTimestamp  = timestamp;
-            // ✅ Don't overwrite hourlyDataJson if it already exists
-            if (stats.hourlyDataJson == null || stats.hourlyDataJson.isEmpty()) {
-                stats.hourlyDataJson = "[]"; // Empty array placeholder
-            }
+            stats.month = month;
+            stats.year = year;
+            stats.dayOfMonth = currentDay;
+            stats.dateTimestamp = timestamp;
+            stats.topAppsJson = topAppsJson;
+            stats.hourlyDataJson = hourlyDataJson;  // ✅ Update hourly data
             db.statsDao().update(stats);
         } else {
-            // ✅ Insert skeleton row
             DailyStats newStats = new DailyStats(
-                    today,
-                    month,
-                    year,
-                    currentDay,  // ✅ dayOfMonth
-                    timestamp,   // ✅ dateTimestamp
-                    0,           // totalCount
-                    totalTime,   // totalUsageTime
-                    0,           // unlockCount
-                    "❓",        // moodEmoji placeholder
-                    "Pending",   // moodTitle placeholder
-                    null,        // topAppsJson
-                    ""           // selfNote
+                    today, month, year, currentDay, timestamp,
+                    0, totalTime, 0,
+                    "❓", "Pending",
+                    topAppsJson,
+                    ""
             );
+            newStats.hourlyDataJson = hourlyDataJson;  // ✅ Set hourly data
             db.statsDao().insert(newStats);
         }
     }
 
+    private void distributeToHourlyBuckets(long[] hourlyMillis, long startMs, long endMs) {
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+
+        long cursor = startMs;
+        while (cursor < endMs) {
+            cal.setTimeInMillis(cursor);
+            int hour = cal.get(Calendar.HOUR_OF_DAY);
+
+            // Find end of this hour slot
+            cal.set(Calendar.MINUTE, 59);
+            cal.set(Calendar.SECOND, 59);
+            cal.set(Calendar.MILLISECOND, 999);
+            long hourEnd = Math.min(cal.getTimeInMillis(), endMs);
+
+            // Add duration for this hour slot
+            hourlyMillis[hour] += (hourEnd - cursor);
+
+            // Move to next hour
+            cursor = hourEnd + 1;
+        }
+    }
     private void sendAlert(String title, String message) {
         Context context = getApplicationContext();
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "Mood Alerts", NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "DigiPulse Alerts", NotificationManager.IMPORTANCE_HIGH);
             if (manager != null) manager.createNotificationChannel(channel);
         }
 

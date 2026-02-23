@@ -288,7 +288,8 @@ public class MainActivity extends AppCompatActivity {
             "com.android.systemui",
             "android",
             "com.google.android.gms",
-            "com.android.settings"
+            "com.android.settings",
+            "com.samsung"
     );
 
     private void processUsageEvents(UsageEvents events, long startTime, long endTime, boolean shouldNavigate) {
@@ -501,7 +502,7 @@ public class MainActivity extends AppCompatActivity {
         if (usageMinutes < 120 && appOpenCount > 15) return new MoodResult("😵", "Distracted Mind", new String[]{"Focus was impossible.", "A butterfly flitting."});
         if (usageMinutes < 90) return new MoodResult("😎", "Slick", new String[]{"In and out. Efficient.", "You rule the phone."});
         if (appOpenCount < 10) return new MoodResult("🧐", "Serious Mode", new String[]{"Usage was purposeful.", "Disciplined session."});
-        if (appOpenCount > 10) return new MoodResult("🎡", "Light-hearted", new String[]{"Just browsing and chatting.", "Casual wandering."});
+        if (appOpenCount > 10 && usageMinutes < 120) return new MoodResult("🎡", "Light-hearted", new String[]{"Just browsing and chatting.", "Casual wandering."});
         return new MoodResult("🧘", "Calm & Grounded", new String[]{"A balanced digital rhythm.", "Stable connection."});
     }
 

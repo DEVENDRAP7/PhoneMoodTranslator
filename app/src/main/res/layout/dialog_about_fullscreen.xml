@@ -33,7 +33,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Phone Mood Translator"
+                    android:text="Digi Pulse"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="#000000"/>
@@ -102,7 +102,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Phone Mood Translator was born from a simple question — what if your phone could tell you how it made you feel today?\n\nMost screen time apps show you cold numbers. Hours. Minutes. App opens. But numbers don't change behavior. Stories do.\n\nWe built a living, breathing Mood Pet that reacts to your digital habits. If you scroll endlessly, it gets anxious. If you focus deeply, it puts on glasses. If you stay up late, it turns into a zombie.\n\nOur mission is simple — help you understand your relationship with your phone, not through guilt, but through self-awareness. One mood at a time."
+                        android:text="Digi Pulse was born from a simple question — what if your phone could tell you how it made you feel today?\n\nMost screen time apps show you cold numbers. Hours. Minutes. App opens. But numbers don't change behavior. Stories do.\n\nWe built a living, breathing Mood Pet that reacts to your digital habits. If you scroll endlessly, it gets anxious. If you focus deeply, it puts on glasses. If you stay up late, it turns into a zombie.\n\nOur mission is simple — help you understand your relationship with your phone, not through guilt, but through self-awareness. One mood at a time."
                         android:textColor="#555555"
                         android:textSize="14sp"
                         android:lineSpacingMultiplier="1.5"/>

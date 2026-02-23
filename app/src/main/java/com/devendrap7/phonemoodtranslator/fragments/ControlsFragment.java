@@ -5,7 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.text.SpannableString;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
 import com.devendrap7.phonemoodtranslator.R;
@@ -41,6 +45,13 @@ public class ControlsFragment extends Fragment {
     private int currentColor;
     private TextView tvAboutDesc;
 
+    // ✅ Battery optimization status views
+    private CardView cardTrackingStatus;
+    private TextView tvStatusIcon;
+    private TextView tvStatusLabel;
+    private TextView tvStatusMessage;
+    private Button btnEnableTracking;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -57,9 +68,15 @@ public class ControlsFragment extends Fragment {
         btnPickColor      = view.findViewById(R.id.btnPickColor);
         tvAboutDesc       = view.findViewById(R.id.tvAboutDesc);
 
-        String desc = "Phone Mood Translator helps you understand your screen time habits through mood-based insights. ";
+        // ✅ Find battery optimization status views
+        cardTrackingStatus = view.findViewById(R.id.cardTrackingStatus);
+        tvStatusIcon       = view.findViewById(R.id.tvStatusIcon);
+        tvStatusLabel      = view.findViewById(R.id.tvStatusLabel);
+        tvStatusMessage    = view.findViewById(R.id.tvStatusMessage);
+        btnEnableTracking  = view.findViewById(R.id.btnEnableTracking);
 
-// ✅ Build spannable with clickable "Read More →" at end
+        String desc = "Digi Pulse helps you understand your screen time habits through mood-based insights. ";
+
         SpannableString spannable = new SpannableString(desc + "Read More →");
 
         spannable.setSpan(new android.text.style.ForegroundColorSpan(
@@ -85,12 +102,10 @@ public class ControlsFragment extends Fragment {
                                           .setOnClickListener(rv -> {
                                               String packageName = requireContext().getPackageName();
                                               try {
-                                                  // ✅ Opens Play Store app directly
                                                   startActivity(new Intent(Intent.ACTION_VIEW,
                                                           android.net.Uri.parse(
                                                                   "market://details?id=" + packageName)));
                                               } catch (android.content.ActivityNotFoundException e) {
-                                                  // ✅ Fallback to browser if Play Store not installed
                                                   startActivity(new Intent(Intent.ACTION_VIEW,
                                                           android.net.Uri.parse(
                                                                   "https://play.google.com/store/apps/details?id="
@@ -103,7 +118,7 @@ public class ControlsFragment extends Fragment {
                               @Override
                               public void updateDrawState(@NonNull android.text.TextPaint ds) {
                                   ds.setColor(Color.parseColor("#1c1554"));
-                                  ds.setUnderlineText(false); // ✅ no underline
+                                  ds.setUnderlineText(false);
                               }
                           }, desc.length(), spannable.length(),
                 SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -116,14 +131,12 @@ public class ControlsFragment extends Fragment {
         SharedPreferences prefs = requireContext()
                 .getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
 
-        // ── Load saved state ──
         etFutureNote.setText(prefs.getString("future_note", ""));
         switchSocialLimit.setChecked(
                 prefs.getBoolean("limit_social_enabled", true));
         switchTotalLimit.setChecked(
                 prefs.getBoolean("limit_total_enabled", true));
 
-        // ── Load saved theme color ──
         currentColor = prefs.getInt("bg_color",
                 Color.parseColor("#4A148C"));
         viewColorPreview.setBackground(
@@ -131,7 +144,6 @@ public class ControlsFragment extends Fragment {
         viewColorPreview.setBackgroundTintList(
                 android.content.res.ColorStateList.valueOf(currentColor));
 
-        // ── Save Note ──
         btnSaveNote.setOnClickListener(v -> {
             String note = etFutureNote.getText().toString();
             prefs.edit().putString("future_note", note).apply();
@@ -174,7 +186,6 @@ public class ControlsFragment extends Fragment {
             }).start();
         });
 
-        // ── Switch listeners ──
         switchSocialLimit.setOnCheckedChangeListener((btn, isChecked) ->
                 prefs.edit().putBoolean(
                         "limit_social_enabled", isChecked).apply());
@@ -183,7 +194,6 @@ public class ControlsFragment extends Fragment {
                 prefs.edit().putBoolean(
                         "limit_total_enabled", isChecked).apply());
 
-        // ── Theme Color Picker ──
         btnPickColor.setOnClickListener(v -> {
             AmbilWarnaDialog colorPicker = new AmbilWarnaDialog(
                     requireContext(), currentColor,
@@ -195,7 +205,6 @@ public class ControlsFragment extends Fragment {
                         public void onOk(AmbilWarnaDialog dialog,
                                          int color) {
                             currentColor = color;
-                            // ✅ Save to prefs
                             prefs.edit().putInt("bg_color", color).apply();
                             viewColorPreview.setBackground(
                                     requireContext().getDrawable(R.drawable.circle_preview));
@@ -208,6 +217,75 @@ public class ControlsFragment extends Fragment {
                     });
             colorPicker.show();
         });
+
+        // ✅ Update battery optimization status
+        updateBatteryOptimizationStatus();
+
+        // ✅ Enable tracking button click
+        btnEnableTracking.setOnClickListener(v -> {
+            openBatteryOptimizationSettings();
+        });
+
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // ✅ Refresh status when fragment becomes visible
+        updateBatteryOptimizationStatus();
+    }
+
+    // ✅ Check battery optimization status and update UI
+    private void updateBatteryOptimizationStatus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager)
+                    requireContext().getSystemService(Context.POWER_SERVICE);
+            String packageName = requireContext().getPackageName();
+
+            boolean isOptimizationDisabled = pm != null &&
+                    pm.isIgnoringBatteryOptimizations(packageName);
+
+            if (isOptimizationDisabled) {
+                // ✅ Tracking is ACTIVE
+                tvStatusIcon.setText("🟢");
+                tvStatusLabel.setText("Active");
+                tvStatusMessage.setText("Collecting usage data automatically");
+                btnEnableTracking.setVisibility(View.GONE);
+            } else {
+                // ❌ Tracking is DISABLED
+                tvStatusIcon.setText("🔴");
+                tvStatusLabel.setText("Inactive");
+                tvStatusMessage.setText("Battery optimization is blocking background tracking");
+                btnEnableTracking.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // Pre-Marshmallow — no battery optimization exists
+            tvStatusIcon.setText("🟢");
+            tvStatusLabel.setText("Active");
+            tvStatusMessage.setText("Collecting usage data automatically");
+            btnEnableTracking.setVisibility(View.GONE);
+        }
+    }
+
+    // ✅ Open battery optimization settings
+    private void openBatteryOptimizationSettings() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                Intent intent = new Intent(
+                        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(android.net.Uri.parse(
+                        "package:" + requireContext().getPackageName()));
+                startActivity(intent);
+
+                Toast.makeText(getContext(),
+                        "Please allow to enable background tracking",
+                        Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                // Fallback to general battery settings
+                Intent intent = new Intent(Settings.ACTION_SETTINGS);
+                startActivity(intent);
+            }
+        }
     }
 }

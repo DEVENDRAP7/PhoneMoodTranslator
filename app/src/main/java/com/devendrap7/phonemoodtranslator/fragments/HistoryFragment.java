@@ -71,6 +71,7 @@ public class HistoryFragment extends Fragment {
         historyList = new ArrayList<>();
         adapter = new HistoryAdapter(historyList, item -> showDetailDialog(item));
         recyclerView.setAdapter(adapter);
+        recyclerView.setNestedScrollingEnabled(false);
 
         // 2. Calendar Setup
         setupCalendarUI(view);

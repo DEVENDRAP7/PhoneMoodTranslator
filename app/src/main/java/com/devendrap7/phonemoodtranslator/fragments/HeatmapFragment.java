@@ -1,5 +1,9 @@
 package com.devendrap7.phonemoodtranslator.fragments;
 
+import android.app.usage.UsageEvents;
+import android.app.usage.UsageStatsManager;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -9,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -429,7 +434,12 @@ public class HeatmapFragment extends Fragment {
 
             // 24 hour blocks
             for (int hour = 0; hour < 24; hour++) {
+                final int hourIndex = hour;
+                final String finalDate = dateStr;
+
                 View block = new View(getContext());
+
+
                 LinearLayout.LayoutParams blockParams =
                         new LinearLayout.LayoutParams(0, blockHeight, 1f);
                 blockParams.setMargins(blockMargin, 0, blockMargin, 0);
@@ -441,6 +451,12 @@ public class HeatmapFragment extends Fragment {
                         ? getHeatColor(hourlyMins[hour])
                         : COLOR_EMPTY);
                 block.setBackground(bg);
+
+                if (stats != null) {
+                    block.setOnClickListener(v -> {
+                        showTinyPopup(v, finalDate, hourIndex);
+                    });
+                }
                 row.addView(block);
             }
 
@@ -581,6 +597,113 @@ public class HeatmapFragment extends Fragment {
                 }
                 if (getView() != null) refreshMonthView();
             }
+        }
+    }
+    private void showTinyPopup(View anchor, String dateStr, int hour) {
+        // 1. Inflate and increase Popup size in code
+        View popupView = LayoutInflater.from(getContext()).inflate(R.layout.popup_usage_detail, null);
+
+        // 2. Set Time Range Header
+        TextView tvTime = popupView.findViewById(R.id.popupTime);
+        tvTime.setText(hour + ":00 - " + (hour + 1) + ":00");
+
+        LinearLayout container = popupView.findViewById(R.id.appDetailsContainer);
+        container.removeAllViews();
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(sdf.parse(dateStr));
+            cal.set(Calendar.HOUR_OF_DAY, hour);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            long start = cal.getTimeInMillis();
+            long end = start + (3600 * 1000);
+
+            // ✅ QUERY EVENTS (Accurate for the specific hour)
+            UsageStatsManager usm = (UsageStatsManager) requireContext().getSystemService(Context.USAGE_STATS_SERVICE);
+            UsageEvents events = usm.queryEvents(start, end);
+
+            Map<String, Long> hourUsageMap = new HashMap<>();
+            Map<String, Long> startTimes = new HashMap<>();
+            UsageEvents.Event event = new UsageEvents.Event();
+
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event);
+                String pkg = event.getPackageName();
+                if (event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                    startTimes.put(pkg, event.getTimeStamp());
+                } else if (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                    if (startTimes.containsKey(pkg)) {
+                        long duration = event.getTimeStamp() - startTimes.get(pkg);
+                        hourUsageMap.put(pkg, hourUsageMap.getOrDefault(pkg, 0L) + duration);
+                        startTimes.remove(pkg);
+                    }
+                }
+            }
+
+            // Sort and take Top 3
+            List<Map.Entry<String, Long>> sortedList = new ArrayList<>(hourUsageMap.entrySet());
+            sortedList.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+
+            PackageManager pm = requireContext().getPackageManager();
+            int count = 0;
+            for (Map.Entry<String, Long> entry : sortedList) {
+                if (count >= 3) break;
+                addTinyAppRow(container, entry.getKey(), entry.getValue() / 60000, pm);
+                count++;
+            }
+
+            if (count == 0) {
+                TextView tv = new TextView(getContext());
+                tv.setText("No activity this hour");
+                tv.setTextSize(12);
+                container.addView(tv);
+            }
+
+        } catch (Exception e) { e.printStackTrace(); }
+
+        // 3. Make the Popup larger (Width: 220dp)
+        float density = getResources().getDisplayMetrics().density;
+        PopupWindow popup = new PopupWindow(popupView, (int)(220 * density), ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        popup.setElevation(20f);
+
+        // Position it slightly higher so it's not hidden by fingers
+        popup.showAsDropDown(anchor, 0, -anchor.getHeight() - (int)(180 * density));
+    }
+
+    private void addTinyAppRow(LinearLayout container, String pkgName, long mins, android.content.pm.PackageManager pm) {
+        // 1. Create a horizontal layout for the row
+        LinearLayout row = new LinearLayout(getContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        row.setPadding(0, 8, 0, 8);
+
+        try {
+            android.content.pm.ApplicationInfo ai = pm.getApplicationInfo(pkgName, 0);
+
+            // 2. Add App Icon
+            android.widget.ImageView icon = new android.widget.ImageView(getContext());
+            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(
+                    (int)(24 * getResources().getDisplayMetrics().density),
+                    (int)(24 * getResources().getDisplayMetrics().density));
+            iconParams.setMargins(0, 0, 12, 0);
+            icon.setLayoutParams(iconParams);
+            icon.setImageDrawable(pm.getApplicationIcon(ai));
+            row.addView(icon);
+
+            // 3. Add App Name and Minutes
+            TextView tv = new TextView(getContext());
+            String appLabel = pm.getApplicationLabel(ai).toString();
+            tv.setText(appLabel + " (" + mins + "m)");
+            tv.setTextSize(14); // Increased size for readability
+            tv.setTextColor(Color.parseColor("#1c1554"));
+            tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            row.addView(tv);
+
+            container.addView(row);
+        } catch (Exception e) {
+            // Skip system processes or uninstalled apps that don't have labels/icons
         }
     }
 }

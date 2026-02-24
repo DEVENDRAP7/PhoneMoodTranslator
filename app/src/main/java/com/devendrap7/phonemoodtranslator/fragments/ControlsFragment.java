@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,6 +52,10 @@ public class ControlsFragment extends Fragment {
     private TextView tvStatusLabel;
     private TextView tvStatusMessage;
     private Button btnEnableTracking;
+    TextView tvSocialSubtitle,tvTotalSubtitle;
+    Button btnChangeSocial, btnChangeTotal;
+
+
 
     @Nullable
     @Override
@@ -67,6 +72,8 @@ public class ControlsFragment extends Fragment {
         viewColorPreview  = view.findViewById(R.id.viewColorPreview);
         btnPickColor      = view.findViewById(R.id.btnPickColor);
         tvAboutDesc       = view.findViewById(R.id.tvAboutDesc);
+        btnChangeSocial = view.findViewById(R.id.btnChangeSocial);
+        btnChangeTotal = view.findViewById(R.id.btnChangeTotal);
 
         // ✅ Find battery optimization status views
         cardTrackingStatus = view.findViewById(R.id.cardTrackingStatus);
@@ -74,6 +81,20 @@ public class ControlsFragment extends Fragment {
         tvStatusLabel      = view.findViewById(R.id.tvStatusLabel);
         tvStatusMessage    = view.findViewById(R.id.tvStatusMessage);
         btnEnableTracking  = view.findViewById(R.id.btnEnableTracking);
+
+        // Inside onCreateView(), after finding all views:
+         tvSocialSubtitle = view.findViewById(R.id.tvSocialSubtitle);
+         tvTotalSubtitle = view.findViewById(R.id.tvTotalSubtitle);
+        updateLimitSubtitles(tvSocialSubtitle, tvTotalSubtitle);
+
+        androidx.cardview.widget.CardView cardSocialLimit = view.findViewById(R.id.cardSocialLimit);
+        androidx.cardview.widget.CardView cardTotalLimit = view.findViewById(R.id.cardTotalLimit);
+
+        btnChangeSocial.setOnClickListener(v -> showCustomizeLimitsDialog());
+        btnChangeTotal.setOnClickListener(v -> showCustomizeLimitsDialog());
+
+        cardSocialLimit.setOnClickListener(v -> showCustomizeLimitsDialog());
+        cardTotalLimit.setOnClickListener(v -> showCustomizeLimitsDialog());
 
         String desc = "Digi Pulse helps you understand your screen time habits through mood-based insights. ";
 
@@ -186,13 +207,19 @@ public class ControlsFragment extends Fragment {
             }).start();
         });
 
-        switchSocialLimit.setOnCheckedChangeListener((btn, isChecked) ->
-                prefs.edit().putBoolean(
-                        "limit_social_enabled", isChecked).apply());
+        switchSocialLimit.setOnCheckedChangeListener((btn, isChecked) -> {
+            prefs.edit().putBoolean("limit_social_enabled", isChecked).apply();
+            Toast.makeText(getContext(),
+                    isChecked ? "Social media limit enabled" : "Social media limit disabled",
+                    Toast.LENGTH_SHORT).show();
+        });
 
-        switchTotalLimit.setOnCheckedChangeListener((btn, isChecked) ->
-                prefs.edit().putBoolean(
-                        "limit_total_enabled", isChecked).apply());
+        switchTotalLimit.setOnCheckedChangeListener((btn, isChecked) -> {
+            prefs.edit().putBoolean("limit_total_enabled", isChecked).apply();
+            Toast.makeText(getContext(),
+                    isChecked ? "Total usage limit enabled" : "Total usage limit disabled",
+                    Toast.LENGTH_SHORT).show();
+        });
 
         btnPickColor.setOnClickListener(v -> {
             AmbilWarnaDialog colorPicker = new AmbilWarnaDialog(
@@ -227,6 +254,99 @@ public class ControlsFragment extends Fragment {
         });
 
         return view;
+    }
+    private void updateLimitSubtitles(TextView tvSocial, TextView tvTotal) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+        float socialHours = prefs.getFloat("limit_social_hours", 2.0f);
+        float totalHours = prefs.getFloat("limit_total_hours", 6.0f);
+
+        tvSocial.setText("Alert after " + formatHours(socialHours));
+        tvTotal.setText("Alert after " + formatHours(totalHours));
+    }
+    // Add this method to ControlsFragment.java
+
+    private void showCustomizeLimitsDialog() {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_customize_limits);
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+
+        SeekBar seekBarSocial = dialog.findViewById(R.id.seekBarSocial);
+        SeekBar seekBarTotal = dialog.findViewById(R.id.seekBarTotal);
+        TextView tvSocialValue = dialog.findViewById(R.id.tvSocialValue);
+        TextView tvTotalValue = dialog.findViewById(R.id.tvTotalValue);
+        Button btnSave = dialog.findViewById(R.id.btnSaveLimits);
+
+        // Load current values
+        float currentSocial = prefs.getFloat("limit_social_hours", 2.0f);
+        float currentTotal = prefs.getFloat("limit_total_hours", 6.0f);
+
+        // Convert hours to SeekBar progress (0 = 30min, 1 = 1h, 2 = 1.5h, etc)
+        int socialProgress = (int)((currentSocial - 0.5f) / 0.5f);
+        int totalProgress = (int)((currentTotal - 0.5f) / 0.5f);
+
+        seekBarSocial.setProgress(socialProgress);
+        seekBarTotal.setProgress(totalProgress);
+        tvSocialValue.setText(formatHours(currentSocial));
+        tvTotalValue.setText(formatHours(currentTotal));
+
+
+
+        // SeekBar listeners
+        seekBarSocial.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float hours = 0.5f + (progress * 0.5f); // 0=30min, 1=1h, 2=1.5h, etc
+                tvSocialValue.setText(formatHours(hours));
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        seekBarTotal.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float hours = 0.5f + (progress * 0.5f);
+                tvTotalValue.setText(formatHours(hours));
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // Save button
+        btnSave.setOnClickListener(v -> {
+            float socialHours = 0.5f + (seekBarSocial.getProgress() * 0.5f);
+            float totalHours = 0.5f + (seekBarTotal.getProgress() * 0.5f);
+
+            prefs.edit()
+                    .putFloat("limit_social_hours", socialHours)
+                    .putFloat("limit_total_hours", totalHours)
+                    .apply();
+
+            updateLimitSubtitles(tvSocialSubtitle, tvTotalSubtitle);
+
+            Toast.makeText(getContext(), "Limits updated! ✅", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    // Helper method to format hours
+    private String formatHours(float hours) {
+        if (hours < 1.0f) {
+            return "30 min";
+        }
+
+        int wholeHours = (int) hours;
+        float remainder = hours - wholeHours;
+
+        if (remainder == 0) {
+            return wholeHours + "h";
+        } else {
+            return wholeHours + "h 30min";
+        }
     }
 
     @Override

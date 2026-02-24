@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -32,12 +33,14 @@ public class HistoryActivity extends AppCompatActivity {
     // Tab containers
     private LinearLayout tab0, tab1, tab2, tab3;
     // Tab texts
-    private TextView text0, text1, text2, text3;
+    private TextView text0, text1, text2, text3 ,tvdigiInsights;
 
     private int currentTab = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
         // ✅ Make status bar match your app background
@@ -51,6 +54,8 @@ public class HistoryActivity extends AppCompatActivity {
         // 1. Initialize Views
         viewPager = findViewById(R.id.viewPager);
         appBarLayout = findViewById(R.id.appBarLayout);
+        tvdigiInsights = appBarLayout.findViewById(R.id.tvdigiInsights);
+
 
         // 2. Initialize Tabs
         tab0 = findViewById(R.id.tab0);
@@ -87,6 +92,7 @@ public class HistoryActivity extends AppCompatActivity {
         // 7. Set default selected tab
         selectTab(0);
     }
+
 
     private void selectTab(int index) {
         // Deselect all tabs first
@@ -153,15 +159,39 @@ public class HistoryActivity extends AppCompatActivity {
 
     private void setupTheme() {
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        int color = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
+        // User's purple/dark color
+        int topColor = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
+        // Your fixed beige color
+        int bottomColor = Color.parseColor("#F7E7CE");
 
         if (appBarLayout != null) {
-            appBarLayout.setBackgroundColor(color);
+            appBarLayout.setBackgroundColor(topColor);
+            // ✅ 1. Kill the elevation shadow that creates the "white line"
+            appBarLayout.setElevation(0f);
+            appBarLayout.setOutlineProvider(null);
         }
 
+        // ✅ 2. Match Status Bar to the Purple Top
         Window window = getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(darkenColor(color));
+        window.setStatusBarColor(topColor);
+
+
+        // ✅ 3. Ensure ViewPager/Activity Root is the Beige Bottom
+
+        // ✅ 4. Dynamic Text Color (Purple background needs light text)
+        int tabTextColor = isColorDark(topColor) ? Color.WHITE : Color.BLACK;
+
+        tvdigiInsights.setTextColor(tabTextColor);
+        text0.setTextColor(tabTextColor);
+        text1.setTextColor(tabTextColor);
+        text2.setTextColor(tabTextColor);
+        text3.setTextColor(tabTextColor);
+    }
+
+    // Helper to determine contrast
+    private boolean isColorDark(int color) {
+        double darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
+        return darkness >= 0.5;
     }
 
     private int darkenColor(int color) {

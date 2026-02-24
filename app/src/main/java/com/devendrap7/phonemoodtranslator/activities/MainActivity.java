@@ -1,5 +1,6 @@
 package com.devendrap7.phonemoodtranslator.activities;
 
+import java.util.*;
 import android.app.AppOpsManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
@@ -20,12 +21,18 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.devendrap7.phonemoodtranslator.models.MoodResult;
 import com.devendrap7.phonemoodtranslator.R;
 import com.devendrap7.phonemoodtranslator.viewmodels.MoodViewModel;
+import com.devendrap7.phonemoodtranslator.views.PulseBackgroundView;
+import com.devendrap7.phonemoodtranslator.views.PulseCoreView;
 import com.devendrap7.phonemoodtranslator.workers.UsageWorker;
 import com.devendrap7.phonemoodtranslator.database.AppDatabase;
 import com.devendrap7.phonemoodtranslator.database.DailyStats;
@@ -54,11 +61,25 @@ public class MainActivity extends AppCompatActivity {
     private MoodViewModel moodViewModel;
     private GestureDetector gestureDetector;
     private Map<String, String> installedAppsCache = new HashMap<>();
+    private PulseBackgroundView pulseBackground;
+    private PulseCoreView pulseCoreView;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+         //Use android.R.id.content to get the root view without needing an ID in XML
+        View rootView = findViewById(android.R.id.content);
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            // This adds padding so your Heatmap doesn't hide behind the status/nav bars
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         // 1. Initialize DB and fix today's record for Version 2 (The Missing Fix)
         AppDatabase db = AppDatabase.getDatabase(this);
@@ -150,6 +171,9 @@ public class MainActivity extends AppCompatActivity {
         tvSubtitle = findViewById(R.id.tvSubtitle);
         tvEmoji = findViewById(R.id.tvEmoji);
         tvSwipeHint = findViewById(R.id.tvSwipeHint);
+        pulseCoreView = findViewById(R.id.pulseCore);
+
+        pulseBackground = findViewById(R.id.pulseBackground);
 
         SharedPreferences prefs = getSharedPreferences(
                 "app_prefs", MODE_PRIVATE);
@@ -183,6 +207,13 @@ public class MainActivity extends AppCompatActivity {
         if (btnHistory != null) {
             btnHistory.setBackgroundTintList(ColorStateList.valueOf(contrastColor));
             btnHistory.setTextColor(themeColor);
+        }
+        if (pulseBackground != null) {
+            pulseBackground.setThemeColor(themeColor);
+        }
+        if (pulseCoreView != null) {
+            // If background is light, make the core Red/Purple. If dark, make it glow.
+            pulseCoreView.setupTheme(this);
         }
     }
 
@@ -293,20 +324,15 @@ public class MainActivity extends AppCompatActivity {
     );
 
     private void processUsageEvents(UsageEvents events, long startTime, long endTime, boolean shouldNavigate) {
-
         HashMap<String, Long> finalAppDurations = new HashMap<>();
         HashMap<String, Long> appStartTimes = new HashMap<>();
-
-        // ✅ NEW — hourly data array (24 slots, one per hour)
         long[] hourlyMillis = new long[24];
+        HashSet<String> uniqueAppsOpened = new HashSet<>(); // ✅ Track unique apps
 
         UsageEvents.Event currentEvent = new UsageEvents.Event();
         while (events.hasNextEvent()) {
             events.getNextEvent(currentEvent);
             long time = currentEvent.getTimeStamp();
-
-            if (time < startTime) continue;
-
             int type = currentEvent.getEventType();
             String pkg = currentEvent.getPackageName();
 
@@ -314,18 +340,23 @@ public class MainActivity extends AppCompatActivity {
 
             if (type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
                 appStartTimes.put(pkg, time);
+                if (time >= startTime) uniqueAppsOpened.add(pkg); // ✅ Count unique only
             } else if (type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                 if (appStartTimes.containsKey(pkg)) {
                     long start = appStartTimes.get(pkg);
-                    long effectiveStart = Math.max(startTime, start);
-                    long duration = time - effectiveStart;
-                    if (duration > 0) {
-                        finalAppDurations.put(pkg,
-                                finalAppDurations.getOrDefault(pkg, 0L) + duration);
 
-                        // ✅ Distribute duration into hourly buckets
-                        distributeToHourlyBuckets(hourlyMillis,
-                                effectiveStart, time);
+                    if (start < startTime && time > startTime) {
+                        long afterMidnight = time - startTime;
+                        finalAppDurations.put(pkg,
+                                finalAppDurations.getOrDefault(pkg, 0L) + afterMidnight);
+                        distributeToHourlyBuckets(hourlyMillis, startTime, time);
+                    } else if (start >= startTime) {
+                        long duration = time - start;
+                        if (duration > 0) {
+                            finalAppDurations.put(pkg,
+                                    finalAppDurations.getOrDefault(pkg, 0L) + duration);
+                            distributeToHourlyBuckets(hourlyMillis, start, time);
+                        }
                     }
                     appStartTimes.remove(pkg);
                 }
@@ -335,23 +366,28 @@ public class MainActivity extends AppCompatActivity {
         // Handle apps still in foreground
         for (Map.Entry<String, Long> entry : appStartTimes.entrySet()) {
             if (!IGNORED_PACKAGES.contains(entry.getKey())) {
-                long effectiveStart = Math.max(startTime, entry.getValue());
-                long duration = endTime - effectiveStart;
-                if (duration > 0) {
-                    finalAppDurations.put(entry.getKey(),
-                            finalAppDurations.getOrDefault(
-                                    entry.getKey(), 0L) + duration);
+                long start = entry.getValue();
 
-                    // ✅ Distribute into hourly buckets
-                    distributeToHourlyBuckets(hourlyMillis,
-                            effectiveStart, endTime);
+                if (start < startTime) {
+                    long duration = endTime - startTime;
+                    if (duration > 0) {
+                        finalAppDurations.put(entry.getKey(),
+                                finalAppDurations.getOrDefault(entry.getKey(), 0L) + duration);
+                        distributeToHourlyBuckets(hourlyMillis, startTime, endTime);
+                    }
+                } else {
+                    long duration = endTime - start;
+                    if (duration > 0) {
+                        finalAppDurations.put(entry.getKey(),
+                                finalAppDurations.getOrDefault(entry.getKey(), 0L) + duration);
+                        distributeToHourlyBuckets(hourlyMillis, start, endTime);
+                    }
                 }
             }
         }
 
-        // --- CALCULATE TOTALS ---
+        // Calculate totals
         long filteredTotalScreenTime = 0;
-        int appOpenCount = 0;
         long maxAppTime = 0;
         String mostUsedApp = "";
         List<AppUsageInfo> detailedList = new ArrayList<>();
@@ -360,13 +396,10 @@ public class MainActivity extends AppCompatActivity {
         for (Map.Entry<String, Long> entry : finalAppDurations.entrySet()) {
             String pkg = entry.getKey();
             long duration = entry.getValue();
-
-            boolean isLauncher = pkg.equals(launcherPkg)
-                    || pkg.contains("launcher");
+            boolean isLauncher = pkg.equals(launcherPkg) || pkg.contains("launcher");
 
             if (!isLauncher) {
                 filteredTotalScreenTime += duration;
-                appOpenCount++;
             }
 
             if (duration > 1000) {
@@ -380,30 +413,29 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // --- AGGREGATION ---
         detailedList.sort((a, b) -> Long.compare(b.usageTime, a.usageTime));
         String topAppsJson = new Gson().toJson(detailedList);
 
-        // ✅ Convert hourlyMillis to hourlyMinutes JSON
         long[] hourlyMinutes = new long[24];
         for (int i = 0; i < 24; i++) {
             hourlyMinutes[i] = hourlyMillis[i] / 60000;
         }
         String hourlyDataJson = new Gson().toJson(hourlyMinutes);
 
-        int usageMinutes    = (int) (filteredTotalScreenTime / (1000 * 60));
+        int usageMinutes = (int) (filteredTotalScreenTime / (1000 * 60));
         int mostUsedMinutes = (int) (maxAppTime / (1000 * 60));
-        boolean usedAtNight = isLateNightUsage(startTime);
-        String mostUsedName = getAppName(
-                mostUsedApp.isEmpty() ? "General Usage" : mostUsedApp);
+        boolean usedAtNight = com.devendrap7.phonemoodtranslator.utils.MoodCalculator.isLateNightUsage();
+        String mostUsedName = getAppName(mostUsedApp.isEmpty() ? "General Usage" : mostUsedApp);
 
-        // Save and Navigate
-        MoodResult mood = translateMood(usageMinutes, appOpenCount, usedAtNight);
-        saveToDatabase(mood, filteredTotalScreenTime,
-                appOpenCount, topAppsJson, hourlyDataJson); // ✅ pass hourly data
+        int uniqueAppCount = uniqueAppsOpened.size(); // ✅ Use unique count
+
+        MoodResult mood = com.devendrap7.phonemoodtranslator.utils.MoodCalculator.calculateMood(
+                usageMinutes, uniqueAppCount, usedAtNight); // ✅ Pass unique count
+
+        saveToDatabase(mood, filteredTotalScreenTime, uniqueAppCount, topAppsJson, hourlyDataJson);
+
         if (shouldNavigate) {
-            navigateToResult(mood, usageMinutes, appOpenCount,
-                    usedAtNight, mostUsedName, mostUsedMinutes);
+            navigateToResult(mood, usageMinutes, uniqueAppCount, usedAtNight, mostUsedName, mostUsedMinutes);
         }
     }
 
@@ -492,26 +524,6 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) { e.printStackTrace(); }
         });
     }
-    private MoodResult translateMood(long usageMinutes, int appOpenCount, boolean usedAtNight) {
-        if (usageMinutes > 420) return new MoodResult("🤯", "Overdose", new String[]{"System overload detected.", "Time to disconnect."});
-        if (usageMinutes >= 360) return new MoodResult("🔗", "Tethered", new String[]{"The phone feels glued to your hand.", "Borderline heavy usage."});
-        if (usageMinutes < 30) return new MoodResult("🌿", "Unplugged", new String[]{"Real life took priority.", "Digital distance felt natural."});
-        if (usedAtNight) return new MoodResult("🌙", "Late-Night Thinker", new String[]{"Sleep was sacrificed for scrolling.", "A midnight mind wandering."});
-        if (usageMinutes > 180 && appOpenCount < 15) return new MoodResult("🔥", "Hyperfocused", new String[]{"Deep work defined your day.", "Sustained attention."});
-        if (usageMinutes > 180 && appOpenCount > 15) return new MoodResult("🧠", "Restless Energy", new String[]{"Your mind was running sprints.", "Stimulation sought."});
-        if (usageMinutes < 120 && appOpenCount > 15) return new MoodResult("😵", "Distracted Mind", new String[]{"Focus was impossible.", "A butterfly flitting."});
-        if (usageMinutes < 90) return new MoodResult("😎", "Slick", new String[]{"In and out. Efficient.", "You rule the phone."});
-        if (appOpenCount < 10) return new MoodResult("🧐", "Serious Mode", new String[]{"Usage was purposeful.", "Disciplined session."});
-        if (appOpenCount > 10 && usageMinutes < 120) return new MoodResult("🎡", "Light-hearted", new String[]{"Just browsing and chatting.", "Casual wandering."});
-        return new MoodResult("🧘", "Calm & Grounded", new String[]{"A balanced digital rhythm.", "Stable connection."});
-    }
-
-    private boolean isLateNightUsage(long todayStartIST) {
-        Calendar now = Calendar.getInstance(TimeZone.getDefault());
-        int hour = now.get(Calendar.HOUR_OF_DAY);
-        return (hour >= 23 || hour <= 4);
-    }
-
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (gestureDetector != null && gestureDetector.onTouchEvent(ev)) { return true; }

@@ -211,9 +211,8 @@ public class AnalysisFragment extends Fragment {
             AppDatabase db = AppDatabase.getDatabase(requireContext());
 
             if (isMonthly) {
-                historyStatsList = db.statsDao().getYearlyStats();
+                historyStatsList = db.statsDao().getMonthlyStats(); // ✅ Need monthly query!
             } else {
-                // ✅ Try timestamp first
                 historyStatsList = db.statsDao().getWeeklyStats();
 
                 // ✅ Debug log
@@ -370,7 +369,7 @@ public class AnalysisFragment extends Fragment {
             cal.add(Calendar.DAY_OF_YEAR, 1);
         }
 
-        renderBarChart(chart, entries, xLabels,true);
+        renderBarChart(chart, entries, xLabels,true,true);
     }
     private void setupBarChartMonthlyGrouped(BarChart chart, List<DailyStats> stats) {
         // 1. Define all 12 months in order
@@ -420,11 +419,12 @@ public class AnalysisFragment extends Fragment {
             xLabels.add(month);
         }
 
-        renderBarChart(chart, entries, xLabels,true);
+        renderBarChart(chart, entries, xLabels,true,true);
     }
 
-    private void renderBarChart(BarChart chart, ArrayList<BarEntry> entries, ArrayList<String> xLabels, boolean showYLabels) {
+    private void renderBarChart(BarChart chart, ArrayList<BarEntry> entries, ArrayList<String> xLabels, boolean showYLabels , boolean showBarValues) {
         BarDataSet dataSet = new BarDataSet(entries, "Usage");
+        dataSet.setDrawValues(showBarValues);
         int textColor = Color.BLACK;
         // Inside renderBarChart, replace setColors with this:
         dataSet.setGradientColor(Color.parseColor("#43c197"), Color.parseColor("#1c1554"));
@@ -530,30 +530,30 @@ public class AnalysisFragment extends Fragment {
         chart.invalidate();
     }
 
-    private void setupAppDetailMonthlyChart(BarChart chart, String appName, List<DailyStats> stats) {
-        ArrayList<BarEntry> entries = new ArrayList<>();
-        ArrayList<String> xLabels = new ArrayList<>();
-        Gson gson = new Gson();
-        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
-
-        // 1. Get only the last 30 days of data
-        int count = Math.min(stats.size(), 30);
-
-        // 2. Loop BACKWARDS to show chronological Left-to-Right (Oldest to Newest)
-        for (int i = count - 1; i >= 0; i--) {
-            DailyStats day = stats.get(i);
-            long usage = getAppUsageForDay(day, appName, gson, listType);
-
-            // chartPosition starts at 0 and goes up
-            int chartPosition = (count - 1) - i;
-            entries.add(new BarEntry(chartPosition, usage / 3600000f));
-
-            // Label with just the Day Number (e.g., "12")
-            xLabels.add(day.date.substring(0, 2));
-        }
-
-        renderBarChart(chart, entries, xLabels,false);
-    }
+//    private void setupAppDetailMonthlyChart(BarChart chart, String appName, List<DailyStats> stats) {
+//        ArrayList<BarEntry> entries = new ArrayList<>();
+//        ArrayList<String> xLabels = new ArrayList<>();
+//        Gson gson = new Gson();
+//        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
+//
+//        // 1. Get only the last 30 days of data
+//        int count = Math.min(stats.size(), 30);
+//
+//        // 2. Loop BACKWARDS to show chronological Left-to-Right (Oldest to Newest)
+//        for (int i = count - 1; i >= 0; i--) {
+//            DailyStats day = stats.get(i);
+//            long usage = getAppUsageForDay(day, appName, gson, listType);
+//
+//            // chartPosition starts at 0 and goes up
+//            int chartPosition = (count - 1) - i;
+//            entries.add(new BarEntry(chartPosition, usage / 3600000f));
+//
+//            // Label with just the Day Number (e.g., "12")
+//            xLabels.add(day.date.substring(0, 2));
+//        }
+//
+//        renderBarChart(chart, entries, xLabels,false,true);
+//    }
     private void setupPieChartToday(DailyStats todayStats) {
         ArrayList<PieEntry> pieEntries = new ArrayList<>();
         ArrayList<Integer> customColors = new ArrayList<>();
@@ -700,98 +700,18 @@ public class AnalysisFragment extends Fragment {
                                   TextView tvTotal,
                                   TextView tvLabelWeekly,
                                   TextView tvLabelMonthly,
-                                  TextView tvLabelTotal) {
-        ArrayList<BarEntry> entries = new ArrayList<>();
-        ArrayList<String> xLabels = new ArrayList<>();
-        long totalAppUsage = 0;
-        Gson gson = new Gson();
-        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
-
-        List<DailyStats> localStats = new ArrayList<>(historyStatsList);
-        Collections.sort(localStats, (a, b) -> b.date.compareTo(a.date));
-
-        int daysWithData = 0;
-
+                                  TextView tvLabelTotal,
+                                  List<DailyStats> dataToUse) { // ✅ New param {
         if (showMonthly) {
-            int count = Math.min(localStats.size(), 30);
-            for (int i = count - 1; i >= 0; i--) {
-                DailyStats day = localStats.get(i);
-                long usage = getAppUsageForDay(day, appName, gson, listType);
-                totalAppUsage += usage;
-                if (usage > 0) daysWithData++;
-                int xIndex = (count - 1) - i;
-                entries.add(new BarEntry(xIndex, usage / 3600000f));
-                xLabels.add(day.date.substring(0, 2));
-            }
-
-            // ✅ Monthly labels
-            if (tvLabelWeekly  != null) tvLabelWeekly.setText("Days Used");
-            if (tvLabelMonthly != null) tvLabelMonthly.setText("Monthly Avg");
-            if (tvLabelTotal   != null) tvLabelTotal.setText("Monthly Total");
-
-            // ✅ Monthly values
-            long monthlyAvg = daysWithData > 0
-                    ? totalAppUsage / daysWithData : 0;
-            if (tvWeekly  != null) tvWeekly.setText(daysWithData + "d");
-            if (tvMonthly != null) tvMonthly.setText(formatTime(monthlyAvg));
-            if (tvTotal   != null) tvTotal.setText(formatTime(totalAppUsage));
-
+            setupAppDetailMonthlyChart(detailChart, appName, dataToUse, // ✅ Use passed data
+                    tvWeekly, tvMonthly, tvTotal,
+                    tvLabelWeekly, tvLabelMonthly, tvLabelTotal);
         } else {
-            // Weekly view — Mon to Sun
-            Calendar cal = Calendar.getInstance(
-                    TimeZone.getDefault());
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY)
-                cal.add(Calendar.DAY_OF_YEAR, -1);
-
-            SimpleDateFormat sdf = new SimpleDateFormat(
-                    "dd MMM yyyy", Locale.ENGLISH);
-            String todayStr = sdf.format(Calendar.getInstance(
-                    TimeZone.getDefault()).getTime());
-            long todayUsage = 0;
-
-            for (int i = 0; i < 7; i++) {
-                String target = sdf.format(cal.getTime());
-                long usage = 0;
-                for (DailyStats day : historyStatsList) {
-                    if (day.date.equals(target)) {
-                        usage = getAppUsageForDay(
-                                day, appName, gson, listType);
-                        if (target.equals(todayStr))
-                            todayUsage = usage;
-                        break;
-                    }
-                }
-                totalAppUsage += usage;
-                if (usage > 0) daysWithData++;
-                entries.add(new BarEntry(i, usage / 3600000f));
-                xLabels.add(new SimpleDateFormat("E", Locale.ENGLISH)
-                        .format(cal.getTime()));
-                cal.add(Calendar.DAY_OF_YEAR, 1);
-            }
-
-            // ✅ Weekly labels
-            if (tvLabelWeekly  != null) tvLabelWeekly.setText("Today's Usage");
-            if (tvLabelMonthly != null) tvLabelMonthly.setText("Weekly Avg");
-            if (tvLabelTotal   != null) tvLabelTotal.setText("Weekly Total");
-
-            // ✅ Weekly values
-            long weeklyAvg = daysWithData > 0
-                    ? totalAppUsage / daysWithData : 0;
-            if (tvWeekly  != null) tvWeekly.setText(formatTime(todayUsage));
-            if (tvMonthly != null) tvMonthly.setText(formatTime(weeklyAvg));
-            if (tvTotal   != null) tvTotal.setText(formatTime(totalAppUsage));
+            setupAppDetailWeeklyChart(detailChart, appName, dataToUse, // ✅ Use passed data
+                    tvWeekly, tvMonthly, tvTotal,
+                    tvLabelWeekly, tvLabelMonthly, tvLabelTotal);
         }
-
-        renderBarChart(detailChart, entries, xLabels, false);
     }
-    // =========================================================
-    // 📱 UPDATED APP LIST LOGIC (NOW SHOWS ALL + SORTED)
-    // =========================================================
-
     private void updateAppList(List<DailyStats> statsList) {
         llAppAnalysisList.removeAllViews();
         Map<String, Long> appTotalMap = new HashMap<>();
@@ -959,16 +879,35 @@ public class AnalysisFragment extends Fragment {
             selected.setTextColor(Color.WHITE);
 
             boolean showMonthly = (checkedId == R.id.btnPopupMonth);
-            updatePopupChart(detailChart, appName, showMonthly,
-                    tvWeekly, tvMonthly, tvTotal,
-                    tvLabelWeekly, tvLabelMonthly, tvLabelTotal);
+            if (showMonthly) {
+                // Fetch fresh monthly data for popup
+                new Thread(() -> {
+                    AppDatabase db = AppDatabase.getDatabase(requireContext());
+                    List<DailyStats> monthlyData = db.statsDao().getMonthlyStats();
+
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            updatePopupChart(detailChart, appName, true,
+                                    tvWeekly, tvMonthly, tvTotal,
+                                    tvLabelWeekly, tvLabelMonthly, tvLabelTotal,
+                                    monthlyData); // ✅ Pass fresh data
+                        });
+                    }
+                }).start();
+            } else {
+                updatePopupChart(detailChart, appName, false,
+                        tvWeekly, tvMonthly, tvTotal,
+                        tvLabelWeekly, tvLabelMonthly, tvLabelTotal,
+                        historyStatsList); // ✅ Use cached weekly data
+            }
         });
 
         // 4. Initial Load
         popupToggle.check(R.id.btnPopupWeek);
         updatePopupChart(detailChart, appName, false,
                 tvWeekly, tvMonthly, tvTotal,
-                tvLabelWeekly, tvLabelMonthly, tvLabelTotal);
+                tvLabelWeekly, tvLabelMonthly, tvLabelTotal,
+                historyStatsList); // ✅ Add data param
 
         dialog.findViewById(R.id.btnCloseDetail)
                 .setOnClickListener(v -> dialog.dismiss());
@@ -981,6 +920,7 @@ public class AnalysisFragment extends Fragment {
         for (MainActivity.AppUsageInfo app : apps) { if (app.name.equals(appName)) return app.usageTime; }
         return 0;
     }
+
 
     private void preloadIcons(List<DailyStats> stats) {
         PackageManager pm = requireContext().getPackageManager();
@@ -997,6 +937,224 @@ public class AnalysisFragment extends Fragment {
                 }
             }
         }
+    }
+//    private void setupAppDetailWeeklyChart(BarChart detailChart, String appName,
+//                                           List<DailyStats> stats,
+//                                           TextView tvWeekly, TextView tvMonthly, TextView tvTotal,
+//                                           TextView tvLabelWeekly, TextView tvLabelMonthly, TextView tvLabelTotal) {
+//        ArrayList<BarEntry> entries = new ArrayList<>();
+//        ArrayList<String> xLabels = new ArrayList<>();
+//        long totalAppUsage = 0;
+//        Gson gson = new Gson();
+//        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
+//
+//        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+//        cal.set(Calendar.HOUR_OF_DAY, 0);
+//        cal.set(Calendar.MINUTE, 0);
+//        cal.set(Calendar.SECOND, 0);
+//        cal.set(Calendar.MILLISECOND, 0);
+//        while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY)
+//            cal.add(Calendar.DAY_OF_YEAR, -1);
+//
+//        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+//        String todayStr = sdf.format(Calendar.getInstance(TimeZone.getDefault()).getTime());
+//        long todayUsage = 0;
+//        int daysWithData = 0;
+//
+//        for (int i = 0; i < 7; i++) {
+//            String target = sdf.format(cal.getTime());
+//            long usage = 0;
+//            for (DailyStats day : stats) {
+//                if (day.date.equals(target)) {
+//                    usage = getAppUsageForDay(day, appName, gson, listType);
+//                    if (target.equals(todayStr)) todayUsage = usage;
+//                    break;
+//                }
+//            }
+//            totalAppUsage += usage;
+//            if (usage > 0) daysWithData++;
+//            entries.add(new BarEntry(i, usage / 3600000f));
+//            xLabels.add(new SimpleDateFormat("E", Locale.ENGLISH).format(cal.getTime()));
+//            cal.add(Calendar.DAY_OF_YEAR, 1);
+//        }
+//
+//        if (tvLabelWeekly != null) tvLabelWeekly.setText("Today's Usage");
+//        if (tvLabelMonthly != null) tvLabelMonthly.setText("Weekly Avg");
+//        if (tvLabelTotal != null) tvLabelTotal.setText("Weekly Total");
+//
+//        long weeklyAvg = daysWithData > 0 ? totalAppUsage / daysWithData : 0;
+//        if (tvWeekly != null) tvWeekly.setText(formatTime(todayUsage));
+//        if (tvMonthly != null) tvMonthly.setText(formatTime(weeklyAvg));
+//        if (tvTotal != null) tvTotal.setText(formatTime(totalAppUsage));
+//
+//        renderBarChart(detailChart, entries, xLabels, false);
+//    }
+//
+//    private void setupAppDetailMonthlyChart(BarChart detailChart, String appName,
+//                                            List<DailyStats> stats,
+//                                            TextView tvWeekly, TextView tvMonthly, TextView tvTotal,
+//                                            TextView tvLabelWeekly, TextView tvLabelMonthly, TextView tvLabelTotal) {
+//        ArrayList<BarEntry> entries = new ArrayList<>();
+//        ArrayList<String> xLabels = new ArrayList<>();
+//        long totalAppUsage = 0;
+//        Gson gson = new Gson();
+//        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
+//
+//        // Get current month details
+//        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+//        int currentMonth = cal.get(Calendar.MONTH);
+//        int currentYear = cal.get(Calendar.YEAR);
+//        int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+//
+//        // Set to first day of month
+//        cal.set(Calendar.DAY_OF_MONTH, 1);
+//        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+//        sdf.setTimeZone(TimeZone.getDefault());
+//
+//        int daysWithData = 0;
+//
+//        // Loop through ALL days of the month
+//        for (int day = 1; day <= daysInMonth; day++) {
+//            cal.set(Calendar.DAY_OF_MONTH, day);
+//            String dateString = sdf.format(cal.getTime());
+//
+//            long usage = 0;
+//            for (DailyStats stat : stats) {
+//                if (stat.date.equals(dateString)) {
+//                    usage = getAppUsageForDay(stat, appName, gson, listType);
+//                    break;
+//                }
+//            }
+//
+//            totalAppUsage += usage;
+//            if (usage > 0) daysWithData++;
+//
+//            entries.add(new BarEntry(day - 1, usage / 3600000f));
+//            xLabels.add(String.valueOf(day));
+//        }
+//        // Update labels
+//        if (tvLabelWeekly != null) tvLabelWeekly.setText("Days Used");
+//        if (tvLabelMonthly != null) tvLabelMonthly.setText("Monthly Avg");
+//        if (tvLabelTotal != null) tvLabelTotal.setText("Monthly Total");
+//
+//        // Update values
+//        long monthlyAvg = daysWithData > 0 ? totalAppUsage / daysWithData : 0;
+//        if (tvWeekly != null) tvWeekly.setText(daysWithData + "d");
+//        if (tvMonthly != null) tvMonthly.setText(formatTime(monthlyAvg));
+//        if (tvTotal != null) tvTotal.setText(formatTime(totalAppUsage));
+//
+//        renderBarChart(detailChart, entries, xLabels, true);
+//
+//    }
+    private void setupAppDetailWeeklyChart(BarChart detailChart, String appName,
+                                           List<DailyStats> stats,
+                                           TextView tvWeekly, TextView tvMonthly, TextView tvTotal,
+                                           TextView tvLabelWeekly, TextView tvLabelMonthly, TextView tvLabelTotal) {
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        ArrayList<String> xLabels = new ArrayList<>();
+        long totalAppUsage = 0;
+
+        // 1. Move GSON out of the loop
+        Gson gson = new Gson();
+        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
+
+        // 2. Pre-index stats by date for O(1) lookup speed
+        Map<String, DailyStats> statsMap = new HashMap<>();
+        for (DailyStats s : stats) statsMap.put(s.date, s);
+
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY)
+            cal.add(Calendar.DAY_OF_YEAR, -1);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+        String todayStr = sdf.format(Calendar.getInstance(TimeZone.getDefault()).getTime());
+        long todayUsage = 0;
+        int daysWithData = 0;
+
+        for (int i = 0; i < 7; i++) {
+            String target = sdf.format(cal.getTime());
+            long usage = 0;
+
+            // 3. Instant lookup instead of nested for-loop
+            DailyStats day = statsMap.get(target);
+            if (day != null) {
+                usage = getAppUsageForDay(day, appName, gson, listType);
+                if (target.equals(todayStr)) todayUsage = usage;
+            }
+
+            totalAppUsage += usage;
+            if (usage > 0) daysWithData++;
+            entries.add(new BarEntry(i, usage / 3600000f));
+            xLabels.add(new SimpleDateFormat("E", Locale.ENGLISH).format(cal.getTime()));
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        // [Rest of your label and render logic remains exactly the same]
+        if (tvLabelWeekly != null) tvLabelWeekly.setText("Today's Usage");
+        if (tvLabelMonthly != null) tvLabelMonthly.setText("Weekly Avg");
+        if (tvLabelTotal != null) tvLabelTotal.setText("Weekly Total");
+
+        long weeklyAvg = daysWithData > 0 ? totalAppUsage / daysWithData : 0;
+        if (tvWeekly != null) tvWeekly.setText(formatTime(todayUsage));
+        if (tvMonthly != null) tvMonthly.setText(formatTime(weeklyAvg));
+        if (tvTotal != null) tvTotal.setText(formatTime(totalAppUsage));
+
+        renderBarChart(detailChart, entries, xLabels, false,true);
+    }
+    private void setupAppDetailMonthlyChart(BarChart detailChart, String appName,
+                                            List<DailyStats> stats,
+                                            TextView tvWeekly, TextView tvMonthly, TextView tvTotal,
+                                            TextView tvLabelWeekly, TextView tvLabelMonthly, TextView tvLabelTotal) {
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        ArrayList<String> xLabels = new ArrayList<>();
+        long totalAppUsage = 0;
+
+        Gson gson = new Gson();
+        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
+
+        // Indexing for speed
+        Map<String, DailyStats> statsMap = new HashMap<>();
+        for (DailyStats s : stats) statsMap.put(s.date, s);
+
+        Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+        int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+        int daysWithData = 0;
+
+        for (int day = 1; day <= daysInMonth; day++) {
+            cal.set(Calendar.DAY_OF_MONTH, day);
+            String dateString = sdf.format(cal.getTime());
+
+            long usage = 0;
+            DailyStats stat = statsMap.get(dateString); // Optimized lookup
+            if (stat != null) {
+                usage = getAppUsageForDay(stat, appName, gson, listType);
+            }
+
+            totalAppUsage += usage;
+            if (usage > 0) daysWithData++;
+
+            entries.add(new BarEntry(day - 1, usage / 3600000f));
+            xLabels.add(String.valueOf(day));
+        }
+
+        // [Rest of your label and render logic remains exactly the same]
+        if (tvLabelWeekly != null) tvLabelWeekly.setText("Days Used");
+        if (tvLabelMonthly != null) tvLabelMonthly.setText("Monthly Avg");
+        if (tvLabelTotal != null) tvLabelTotal.setText("Monthly Total");
+
+        long monthlyAvg = daysWithData > 0 ? totalAppUsage / daysWithData : 0;
+        if (tvWeekly != null) tvWeekly.setText(daysWithData + "d");
+        if (tvMonthly != null) tvMonthly.setText(formatTime(monthlyAvg));
+        if (tvTotal != null) tvTotal.setText(formatTime(totalAppUsage));
+
+        renderBarChart(detailChart, entries, xLabels, true,false);
     }
 
     private String formatTime(long millis) {

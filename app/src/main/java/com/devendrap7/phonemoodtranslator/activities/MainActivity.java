@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
         HashMap<String, Long> finalAppDurations = new HashMap<>();
         HashMap<String, Long> appStartTimes = new HashMap<>();
         long[] hourlyMillis = new long[24];
-        HashSet<String> uniqueAppsOpened = new HashSet<>(); // ✅ Track unique apps
+        HashSet<String> uniqueAppsOpened = new HashSet<>();
 
         UsageEvents.Event currentEvent = new UsageEvents.Event();
         while (events.hasNextEvent()) {
@@ -340,23 +340,17 @@ public class MainActivity extends AppCompatActivity {
 
             if (type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
                 appStartTimes.put(pkg, time);
-                if (time >= startTime) uniqueAppsOpened.add(pkg); // ✅ Count unique only
+                if (time >= startTime) uniqueAppsOpened.add(pkg);
             } else if (type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                 if (appStartTimes.containsKey(pkg)) {
                     long start = appStartTimes.get(pkg);
+                    long duration = time - start;
 
-                    if (start < startTime && time > startTime) {
-                        long afterMidnight = time - startTime;
+                    if (duration > 0) {
                         finalAppDurations.put(pkg,
-                                finalAppDurations.getOrDefault(pkg, 0L) + afterMidnight);
-                        distributeToHourlyBuckets(hourlyMillis, startTime, time);
-                    } else if (start >= startTime) {
-                        long duration = time - start;
-                        if (duration > 0) {
-                            finalAppDurations.put(pkg,
-                                    finalAppDurations.getOrDefault(pkg, 0L) + duration);
-                            distributeToHourlyBuckets(hourlyMillis, start, time);
-                        }
+                                finalAppDurations.getOrDefault(pkg, 0L) + duration);
+                        distributeToHourlyBuckets(hourlyMillis,
+                                Math.max(start, startTime), time);
                     }
                     appStartTimes.remove(pkg);
                 }
@@ -367,21 +361,13 @@ public class MainActivity extends AppCompatActivity {
         for (Map.Entry<String, Long> entry : appStartTimes.entrySet()) {
             if (!IGNORED_PACKAGES.contains(entry.getKey())) {
                 long start = entry.getValue();
+                long effectiveStart = Math.max(start, startTime);
+                long duration = endTime - effectiveStart;
 
-                if (start < startTime) {
-                    long duration = endTime - startTime;
-                    if (duration > 0) {
-                        finalAppDurations.put(entry.getKey(),
-                                finalAppDurations.getOrDefault(entry.getKey(), 0L) + duration);
-                        distributeToHourlyBuckets(hourlyMillis, startTime, endTime);
-                    }
-                } else {
-                    long duration = endTime - start;
-                    if (duration > 0) {
-                        finalAppDurations.put(entry.getKey(),
-                                finalAppDurations.getOrDefault(entry.getKey(), 0L) + duration);
-                        distributeToHourlyBuckets(hourlyMillis, start, endTime);
-                    }
+                if (duration > 0) {
+                    finalAppDurations.put(entry.getKey(),
+                            finalAppDurations.getOrDefault(entry.getKey(), 0L) + duration);
+                    distributeToHourlyBuckets(hourlyMillis, effectiveStart, endTime);
                 }
             }
         }
@@ -427,10 +413,10 @@ public class MainActivity extends AppCompatActivity {
         boolean usedAtNight = com.devendrap7.phonemoodtranslator.utils.MoodCalculator.isLateNightUsage();
         String mostUsedName = getAppName(mostUsedApp.isEmpty() ? "General Usage" : mostUsedApp);
 
-        int uniqueAppCount = uniqueAppsOpened.size(); // ✅ Use unique count
+        int uniqueAppCount = uniqueAppsOpened.size();
 
         MoodResult mood = com.devendrap7.phonemoodtranslator.utils.MoodCalculator.calculateMood(
-                usageMinutes, uniqueAppCount, usedAtNight); // ✅ Pass unique count
+                usageMinutes, uniqueAppCount, usedAtNight);
 
         saveToDatabase(mood, filteredTotalScreenTime, uniqueAppCount, topAppsJson, hourlyDataJson);
 

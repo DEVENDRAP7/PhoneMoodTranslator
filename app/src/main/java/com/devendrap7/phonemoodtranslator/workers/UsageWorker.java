@@ -184,6 +184,7 @@ public class UsageWorker extends Worker {
                                                     int[] appSwitchCount) {
         Map<String, Long> durations = new HashMap<>();
         Map<String, Long> startTimes = new HashMap<>();
+        java.util.HashSet<String> uniqueApps = new java.util.HashSet<>();
         UsageEvents.Event event = new UsageEvents.Event();
 
         while (events != null && events.hasNextEvent()) {
@@ -194,20 +195,16 @@ public class UsageWorker extends Worker {
 
             if (type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
                 startTimes.put(pkg, time);
-                if (time >= startTime) appSwitchCount[0]++;
+                if (time >= startTime) uniqueApps.add(pkg);
             } else if (type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                 if (startTimes.containsKey(pkg)) {
                     long start = startTimes.get(pkg);
+                    long duration = time - start;
 
-                    // ✅ MIDNIGHT FIX
-                    if (start < startTime && time > startTime) {
-                        long afterMidnight = time - startTime;
-                        durations.put(pkg, durations.getOrDefault(pkg, 0L) + afterMidnight);
-                        distributeToHourlyBuckets(hourlyMillis, startTime, time);
-                    } else if (start >= startTime) {
-                        long duration = time - start;
+                    if (duration > 0) {
                         durations.put(pkg, durations.getOrDefault(pkg, 0L) + duration);
-                        distributeToHourlyBuckets(hourlyMillis, start, time);
+                        distributeToHourlyBuckets(hourlyMillis,
+                                Math.max(start, startTime), time);
                     }
                     startTimes.remove(pkg);
                 }
@@ -217,21 +214,19 @@ public class UsageWorker extends Worker {
         // Handle apps still in foreground
         for (String pkg : startTimes.keySet()) {
             long start = startTimes.get(pkg);
+            long effectiveStart = Math.max(start, startTime);
+            long duration = endTime - effectiveStart;
 
-            // ✅ MIDNIGHT FIX
-            if (start < startTime) {
-                long duration = endTime - startTime;
+            if (duration > 0) {
                 durations.put(pkg, durations.getOrDefault(pkg, 0L) + duration);
-                distributeToHourlyBuckets(hourlyMillis, startTime, endTime);
-            } else {
-                long duration = endTime - start;
-                durations.put(pkg, durations.getOrDefault(pkg, 0L) + duration);
-                distributeToHourlyBuckets(hourlyMillis, start, endTime);
+                distributeToHourlyBuckets(hourlyMillis, effectiveStart, endTime);
             }
         }
 
+        appSwitchCount[0] = uniqueApps.size();
         return durations;
     }
+    
     private String formatHoursForNotification(double hours) {
         if (hours < 1.0) {
             int mins = (int)(hours * 60);

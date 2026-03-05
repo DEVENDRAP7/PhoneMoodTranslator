@@ -64,14 +64,12 @@ public class MainActivity extends AppCompatActivity {
     private PulseBackgroundView pulseBackground;
     private PulseCoreView pulseCoreView;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-         //Use android.R.id.content to get the root view without needing an ID in XML
+        // Use android.R.id.content to get the root view without needing an ID in XML
         View rootView = findViewById(android.R.id.content);
 
         ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
@@ -84,9 +82,8 @@ public class MainActivity extends AppCompatActivity {
         // 1. Initialize DB and fix today's record for Version 2 (The Missing Fix)
         AppDatabase db = AppDatabase.getDatabase(this);
 
-        moodViewModel=new ViewModelProvider(this).get(MoodViewModel.class);
+        moodViewModel = new ViewModelProvider(this).get(MoodViewModel.class);
         moodViewModel.init(this);
-
 
         // Inside MainActivity.java onCreate
         moodViewModel.getTodayStats().observe(this, stats -> {
@@ -98,27 +95,25 @@ public class MainActivity extends AppCompatActivity {
         });
 
         initializeViews();
-        //setupTheme();
+        // setupTheme();
         cacheInstalledApps();
         setupClickListeners();
 
         gestureDetector = new GestureDetector(this, new SwipeGestureListener());
 
         // 2. WorkManager Setup
-        androidx.work.PeriodicWorkRequest usageWorkRequest =
-                new androidx.work.PeriodicWorkRequest.Builder(UsageWorker.class, 15, java.util.concurrent.TimeUnit.MINUTES)
-                        .build();
+        androidx.work.PeriodicWorkRequest usageWorkRequest = new androidx.work.PeriodicWorkRequest.Builder(
+                UsageWorker.class, 15, java.util.concurrent.TimeUnit.MINUTES)
+                .build();
 
         androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
                 "MoodUsageMonitor",
                 androidx.work.ExistingPeriodicWorkPolicy.KEEP,
-                usageWorkRequest
-        );
+                usageWorkRequest);
         // After WorkManager scheduling
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String packageName = getPackageName();
-            android.os.PowerManager pm = (android.os.PowerManager)
-                    getSystemService(Context.POWER_SERVICE);
+            android.os.PowerManager pm = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
 
             if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
                 // Show one-time dialog asking user to disable battery optimization
@@ -128,7 +123,8 @@ public class MainActivity extends AppCompatActivity {
                 if (!askedBefore) {
                     new androidx.appcompat.app.AlertDialog.Builder(this)
                             .setTitle("Enable Background Tracking")
-                            .setMessage("To track your usage even when the app is closed, please disable battery optimization for this app.")
+                            .setMessage(
+                                    "To track your usage even when the app is closed, please disable battery optimization for this app.")
                             .setPositiveButton("Settings", (dialog, which) -> {
                                 Intent intent = new Intent(
                                         android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
@@ -144,11 +140,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+            if (checkSelfPermission(
+                    android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[] { android.Manifest.permission.POST_NOTIFICATIONS }, 101);
             }
         }
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -181,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 Color.parseColor("#4A148C"));
         applyTheme(mDefaultColor);
     }
+
     private void setupClickListeners() {
         btnStart.setOnClickListener(v -> handleStartButtonClick());
         btnHistory.setOnClickListener(v -> {
@@ -189,13 +188,17 @@ public class MainActivity extends AppCompatActivity {
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
     }
+
     private void applyTheme(int themeColor) {
-        if (rootLayout != null) rootLayout.setBackgroundColor(themeColor);
+        if (rootLayout != null)
+            rootLayout.setBackgroundColor(themeColor);
         boolean isDark = isColorDark(themeColor);
         int contrastColor = isDark ? Color.WHITE : Color.BLACK;
 
-        if (tvTitle != null) tvTitle.setTextColor(contrastColor);
-        if (tvSubtitle != null) tvSubtitle.setTextColor(contrastColor);
+        if (tvTitle != null)
+            tvTitle.setTextColor(contrastColor);
+        if (tvSubtitle != null)
+            tvSubtitle.setTextColor(contrastColor);
         if (tvSwipeHint != null) {
             tvSwipeHint.setTextColor(contrastColor);
             tvSwipeHint.setAlpha(0.7f);
@@ -235,12 +238,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getAppName(String packageName) {
-        if (installedAppsCache.containsKey(packageName)) { return installedAppsCache.get(packageName); }
+        if (installedAppsCache.containsKey(packageName)) {
+            return installedAppsCache.get(packageName);
+        }
         return formatPackageName(packageName);
     }
 
     private String formatPackageName(String packageName) {
-        if (packageName == null) return "Unknown";
+        if (packageName == null)
+            return "Unknown";
         String[] parts = packageName.split("\\.");
         String rawName = packageName;
         if (parts.length > 1) {
@@ -257,8 +263,10 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Please allow usage access", Toast.LENGTH_LONG).show();
             startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
         } else {
-            // REMOVED: moodViewModel.readUsageDataAndRefresh(this); <- was firing before data ready
-            // The real calculation happens inside readUsageData() -> processUsageEvents() -> navigateToResult()
+            // REMOVED: moodViewModel.readUsageDataAndRefresh(this); <- was firing before
+            // data ready
+            // The real calculation happens inside readUsageData() -> processUsageEvents()
+            // -> navigateToResult()
             readUsageData(); // This already calls navigateToResult() at the end with all the data
         }
     }
@@ -266,9 +274,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean hasUsageAccessPermission() {
         try {
             AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
-            int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getPackageName());
+            int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(),
+                    getPackageName());
             return mode == AppOpsManager.MODE_ALLOWED;
-        } catch (Exception e) { return false; }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void readUsageData() {
@@ -289,11 +300,15 @@ public class MainActivity extends AppCompatActivity {
             startTime = endTime - (1000 * 60); // Default to 1 min ago if at exactly midnight
         }
 
-        UsageEvents events = usageStatsManager.queryEvents(startTime, endTime);
+        // ✅ MIDNIGHT FIX: Query from 6 hours before midnight to catch running apps
+        long queryStart = startTime - (6 * 60 * 60 * 1000);
+
+        UsageEvents events = usageStatsManager.queryEvents(queryStart, endTime);
         if (events != null) {
             processUsageEvents(events, startTime, endTime, true);
         }
     }
+
     private void readUsageDataSilent() {
         UsageStatsManager usageStatsManager = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
         Calendar calendar = Calendar.getInstance();
@@ -303,7 +318,11 @@ public class MainActivity extends AppCompatActivity {
         calendar.set(Calendar.MILLISECOND, 0);
         long startTime = calendar.getTimeInMillis();
         long endTime = System.currentTimeMillis();
-        UsageEvents events = usageStatsManager.queryEvents(startTime, endTime);
+
+        // ✅ MIDNIGHT FIX: Query from 6 hours before midnight to catch running apps
+        long queryStart = startTime - (6 * 60 * 60 * 1000);
+
+        UsageEvents events = usageStatsManager.queryEvents(queryStart, endTime);
         if (events != null) {
             processUsageEvents(events, startTime, endTime, false); // ✅ false = no navigation
         }
@@ -315,13 +334,13 @@ public class MainActivity extends AppCompatActivity {
         ResolveInfo resolveInfo = getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
         return (resolveInfo != null && resolveInfo.activityInfo != null) ? resolveInfo.activityInfo.packageName : "";
     }
+
     private static final List<String> IGNORED_PACKAGES = Arrays.asList(
             "com.android.systemui",
             "android",
             "com.google.android.gms",
             "com.android.settings",
-            "com.samsung"
-    );
+            "com.samsung");
 
     private void processUsageEvents(UsageEvents events, long startTime, long endTime, boolean shouldNavigate) {
         HashMap<String, Long> finalAppDurations = new HashMap<>();
@@ -336,21 +355,24 @@ public class MainActivity extends AppCompatActivity {
             int type = currentEvent.getEventType();
             String pkg = currentEvent.getPackageName();
 
-            if (IGNORED_PACKAGES.contains(pkg)) continue;
+            if (IGNORED_PACKAGES.contains(pkg))
+                continue;
 
             if (type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
                 appStartTimes.put(pkg, time);
-                if (time >= startTime) uniqueAppsOpened.add(pkg);
+                if (time >= startTime)
+                    uniqueAppsOpened.add(pkg);
             } else if (type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                 if (appStartTimes.containsKey(pkg)) {
                     long start = appStartTimes.get(pkg);
-                    long duration = time - start;
+                    long effectiveStart = Math.max(start, startTime);
+                    long duration = time - effectiveStart;
 
                     if (duration > 0) {
                         finalAppDurations.put(pkg,
                                 finalAppDurations.getOrDefault(pkg, 0L) + duration);
                         distributeToHourlyBuckets(hourlyMillis,
-                                Math.max(start, startTime), time);
+                                effectiveStart, time);
                     }
                     appStartTimes.remove(pkg);
                 }
@@ -394,7 +416,8 @@ public class MainActivity extends AppCompatActivity {
                     mostUsedApp = pkg;
                 }
                 String name = getAppName(pkg);
-                if (isLauncher) name = "Home Screen";
+                if (isLauncher)
+                    name = "Home Screen";
                 detailedList.add(new AppUsageInfo(name, duration));
             }
         }
@@ -427,7 +450,7 @@ public class MainActivity extends AppCompatActivity {
 
     // ✅ NEW METHOD — distributes usage time into hourly buckets
     private void distributeToHourlyBuckets(long[] hourlyMillis,
-                                           long startMs, long endMs) {
+            long startMs, long endMs) {
         Calendar cal = Calendar.getInstance();
 
         long cursor = startMs;
@@ -449,7 +472,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void navigateToResult(MoodResult mood, long usageMinutes, int appOpenCount, boolean usedAtNight, String mostUsedAppName, int mostUsedMinutes) {
+    private void navigateToResult(MoodResult mood, long usageMinutes, int appOpenCount, boolean usedAtNight,
+            String mostUsedAppName, int mostUsedMinutes) {
         Intent intent = new Intent(this, ResultActivity.class);
         intent.putExtra("emoji", mood.emoji);
         intent.putExtra("title", mood.title);
@@ -468,8 +492,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveToDatabase(MoodResult mood, long totalUsageTime,
-                                int unlockCount, String topAppsJson,
-                                String hourlyDataJson) { // ✅ new param
+            int unlockCount, String topAppsJson,
+            String hourlyDataJson) { // ✅ new param
         java.util.concurrent.Executors.newSingleThreadExecutor().execute(() -> {
             try {
                 Calendar cal = Calendar.getInstance();
@@ -479,21 +503,21 @@ public class MainActivity extends AppCompatActivity {
                 String todayDate = dateFormat.format(cal.getTime());
 
                 int currentMonth = cal.get(Calendar.MONTH) + 1;
-                int currentYear  = cal.get(Calendar.YEAR);
-                int currentDay   = cal.get(Calendar.DAY_OF_MONTH);
-                long timestamp   = cal.getTimeInMillis();
+                int currentYear = cal.get(Calendar.YEAR);
+                int currentDay = cal.get(Calendar.DAY_OF_MONTH);
+                long timestamp = cal.getTimeInMillis();
 
                 AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
                 DailyStats existing = db.statsDao().getStatsByDate(todayDate);
 
                 if (existing != null) {
                     existing.totalUsageTime = totalUsageTime;
-                    existing.unlockCount    = unlockCount;
-                    existing.moodEmoji      = mood.emoji;
-                    existing.moodTitle      = mood.title;
-                    existing.topAppsJson    = topAppsJson;
-                    existing.dayOfMonth     = currentDay;
-                    existing.dateTimestamp  = timestamp;
+                    existing.unlockCount = unlockCount;
+                    existing.moodEmoji = mood.emoji;
+                    existing.moodTitle = mood.title;
+                    existing.topAppsJson = topAppsJson;
+                    existing.dayOfMonth = currentDay;
+                    existing.dateTimestamp = timestamp;
                     existing.hourlyDataJson = hourlyDataJson; // ✅
                     db.statsDao().update(existing);
                 } else {
@@ -502,24 +526,29 @@ public class MainActivity extends AppCompatActivity {
                             currentDay, timestamp,
                             unlockCount, totalUsageTime,
                             unlockCount, mood.emoji, mood.title,
-                            topAppsJson, ""
-                    );
+                            topAppsJson, "");
                     todayStats.hourlyDataJson = hourlyDataJson; // ✅
                     db.statsDao().insert(todayStats);
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (gestureDetector != null && gestureDetector.onTouchEvent(ev)) { return true; }
+        if (gestureDetector != null && gestureDetector.onTouchEvent(ev)) {
+            return true;
+        }
         return super.dispatchTouchEvent(ev);
     }
 
     private class SwipeGestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (e1 == null || e2 == null) return false;
+            if (e1 == null || e2 == null)
+                return false;
             float diffY = e2.getY() - e1.getY();
             if (Math.abs(diffY) > 100 && Math.abs(velocityY) > 100 && diffY < 0) {
                 onSwipeUp();
@@ -537,6 +566,7 @@ public class MainActivity extends AppCompatActivity {
     public static class AppUsageInfo {
         public String name;
         public long usageTime;
+
         public AppUsageInfo(String name, long usageTime) {
             this.name = name;
             this.usageTime = usageTime;

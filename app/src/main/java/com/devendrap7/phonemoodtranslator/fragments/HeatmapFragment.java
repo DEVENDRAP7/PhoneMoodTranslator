@@ -48,48 +48,48 @@ public class HeatmapFragment extends Fragment {
     private TextView tvTotalDays, tvPeakDay, tvAvgDaily;
 
     // ── Colors ──
-    private static final int COLOR_EMPTY  = Color.parseColor("#E8E8E8");
+    private static final int COLOR_EMPTY = Color.parseColor("#E8E8E8");
     private static final int COLOR_LEVEL1 = Color.parseColor("#FFE0B2");
     private static final int COLOR_LEVEL2 = Color.parseColor("#FFB74D");
     private static final int COLOR_LEVEL3 = Color.parseColor("#FF8C00");
     private static final int COLOR_LEVEL4 = Color.parseColor("#E65100");
 
-    private static final String[] DAY_LABELS  = {"Mon","Tue","Wed","Thu","Fri","Sat","Sun"};
+    private static final String[] DAY_LABELS = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
     private static final String[] MONTH_NAMES = {
-            "January","February","March","April","May","June",
-            "July","August","September","October","November","December"
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
     };
 
     // ── Data ──
     private Map<String, DailyStats> statsMap = new HashMap<>();
-    private List<List<String>> allWeeks      = new ArrayList<>();
-    private List<String> monthList           = new ArrayList<>();
+    private List<List<String>> allWeeks = new ArrayList<>();
+    private List<String> monthList = new ArrayList<>();
 
     // ── State ──
     private int currentMonthIndex = 0;
-    private int currentWeekIndex  = 0; // index within current month's weeks
+    private int currentWeekIndex = 0; // index within current month's weeks
     private List<List<String>> currentMonthWeeks = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_heatmap, container, false);
 
         // Find views
         samsungHeatmapGrid = view.findViewById(R.id.samsungHeatmapGrid);
-        tvCurrentMonth     = view.findViewById(R.id.tvCurrentMonth);
-        tvPrevMonth        = view.findViewById(R.id.tvPrevMonth);
-        tvNextMonth        = view.findViewById(R.id.tvNextMonth);
-        tvCurrentWeek      = view.findViewById(R.id.tvCurrentWeek);
-        tvPrevWeek         = view.findViewById(R.id.tvPrevWeek);
-        tvNextWeek         = view.findViewById(R.id.tvNextWeek);
-        tvWeekTotal        = view.findViewById(R.id.tvWeekTotal);
-        tvWeekTopApp       = view.findViewById(R.id.tvWeekTopApp);
-        tvTotalDays        = view.findViewById(R.id.tvTotalDays);
-        tvPeakDay          = view.findViewById(R.id.tvPeakDay);
-        tvAvgDaily         = view.findViewById(R.id.tvAvgDaily);
+        tvCurrentMonth = view.findViewById(R.id.tvCurrentMonth);
+        tvPrevMonth = view.findViewById(R.id.tvPrevMonth);
+        tvNextMonth = view.findViewById(R.id.tvNextMonth);
+        tvCurrentWeek = view.findViewById(R.id.tvCurrentWeek);
+        tvPrevWeek = view.findViewById(R.id.tvPrevWeek);
+        tvNextWeek = view.findViewById(R.id.tvNextWeek);
+        tvWeekTotal = view.findViewById(R.id.tvWeekTotal);
+        tvWeekTopApp = view.findViewById(R.id.tvWeekTopApp);
+        tvTotalDays = view.findViewById(R.id.tvTotalDays);
+        tvPeakDay = view.findViewById(R.id.tvPeakDay);
+        tvAvgDaily = view.findViewById(R.id.tvAvgDaily);
 
         // Month nav
         tvPrevMonth.setOnClickListener(v -> navigateMonth(-1));
@@ -114,7 +114,8 @@ public class HeatmapFragment extends Fragment {
 
             // Build stats map
             statsMap.clear();
-            for (DailyStats s : allStats) statsMap.put(s.date, s);
+            for (DailyStats s : allStats)
+                statsMap.put(s.date, s);
 
             SimpleDateFormat sdf = new SimpleDateFormat(
                     "dd MMM yyyy", Locale.ENGLISH);
@@ -124,10 +125,13 @@ public class HeatmapFragment extends Fragment {
             Calendar start = Calendar.getInstance(
                     TimeZone.getDefault());
             if (!allStats.isEmpty()) {
-                try { start.setTime(sdf.parse(allStats.get(0).date)); }
-                catch (Exception e) { e.printStackTrace(); }
+                try {
+                    start.setTime(sdf.parse(allStats.get(0).date));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-// ✅ Roll back to Monday
+            // ✅ Roll back to Monday
             start.set(Calendar.HOUR_OF_DAY, 0);
             start.set(Calendar.MINUTE, 0);
             start.set(Calendar.SECOND, 0);
@@ -135,17 +139,17 @@ public class HeatmapFragment extends Fragment {
             while (start.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY)
                 start.add(Calendar.DAY_OF_YEAR, -1);
 
-// Find Monday of current week then go to Sunday
+            // Find Monday of current week then go to Sunday
             Calendar end = Calendar.getInstance(
                     TimeZone.getDefault());
             end.set(Calendar.HOUR_OF_DAY, 23);
             end.set(Calendar.MINUTE, 59);
             end.set(Calendar.SECOND, 59);
-// ✅ Roll forward to Sunday
+            // ✅ Roll forward to Sunday
             while (end.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY)
                 end.add(Calendar.DAY_OF_YEAR, 1);
 
-// ✅ Build weeks Mon→Sun
+            // ✅ Build weeks Mon→Sun
             allWeeks.clear();
             List<String> currentWeek = new ArrayList<>();
             Calendar cursor = (Calendar) start.clone();
@@ -158,18 +162,20 @@ public class HeatmapFragment extends Fragment {
                 }
                 cursor.add(Calendar.DAY_OF_YEAR, 1);
             }
-            if (!currentWeek.isEmpty()) allWeeks.add(currentWeek);
+            if (!currentWeek.isEmpty())
+                allWeeks.add(currentWeek);
 
             // Build month list
             SimpleDateFormat monthFmt = new SimpleDateFormat(
                     "MMMM yyyy", Locale.ENGLISH);
-            SimpleDateFormat dateFmt  = new SimpleDateFormat(
+            SimpleDateFormat dateFmt = new SimpleDateFormat(
                     "dd MMM yyyy", Locale.ENGLISH);
             monthList.clear();
             String lastMonth = "";
             for (List<String> week : allWeeks) {
                 for (String dateStr : week) {
-                    if (dateStr.isEmpty()) continue;
+                    if (dateStr.isEmpty())
+                        continue;
                     try {
                         Calendar c = Calendar.getInstance();
                         c.setTime(dateFmt.parse(dateStr));
@@ -178,7 +184,9 @@ public class HeatmapFragment extends Fragment {
                             monthList.add(m);
                             lastMonth = m;
                         }
-                    } catch (Exception e) { e.printStackTrace(); }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     break;
                 }
             }
@@ -190,7 +198,7 @@ public class HeatmapFragment extends Fragment {
             if (currentMonthIndex < 0)
                 currentMonthIndex = monthList.size() - 1;
 
-// ✅ Find current week index within current month
+            // ✅ Find current week index within current month
             String todayStr = sdf.format(Calendar.getInstance(
                     TimeZone.getDefault()).getTime());
             currentMonthWeeks = getWeeksForMonth(nowMonth);
@@ -212,14 +220,15 @@ public class HeatmapFragment extends Fragment {
                 trackedDays++;
                 if (s.totalUsageTime > peakUsage) {
                     peakUsage = s.totalUsageTime;
-                    peakDate  = s.date;
+                    peakDate = s.date;
                 }
             }
-            final long avgDaily        = trackedDays > 0
-                    ? totalUsage / trackedDays : 0;
+            final long avgDaily = trackedDays > 0
+                    ? totalUsage / trackedDays
+                    : 0;
             final String finalPeakDate = peakDate;
-            final long finalPeakUsage  = peakUsage;
-            final int finalTracked     = trackedDays;
+            final long finalPeakUsage = peakUsage;
+            final int finalTracked = trackedDays;
 
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
@@ -236,14 +245,16 @@ public class HeatmapFragment extends Fragment {
     // ─────────────────────────────────────────
     private void navigateMonth(int direction) {
         int newIndex = currentMonthIndex + direction;
-        if (newIndex < 0 || newIndex >= monthList.size()) return;
+        if (newIndex < 0 || newIndex >= monthList.size())
+            return;
         currentMonthIndex = newIndex;
-        currentWeekIndex  = 0;
+        currentWeekIndex = 0;
         refreshMonthView();
     }
 
     private void refreshMonthView() {
-        if (monthList.isEmpty()) return;
+        if (monthList.isEmpty())
+            return;
 
         String monthKey = monthList.get(currentMonthIndex);
         tvCurrentMonth.setText(monthKey);
@@ -254,7 +265,8 @@ public class HeatmapFragment extends Fragment {
         // Clamp week index
         if (currentWeekIndex >= currentMonthWeeks.size())
             currentWeekIndex = currentMonthWeeks.size() - 1;
-        if (currentWeekIndex < 0) currentWeekIndex = 0;
+        if (currentWeekIndex < 0)
+            currentWeekIndex = 0;
 
         // Arrow visibility
         tvPrevMonth.setAlpha(currentMonthIndex == 0 ? 0.3f : 1f);
@@ -280,8 +292,9 @@ public class HeatmapFragment extends Fragment {
                 tvCurrentMonth.setText(monthList.get(currentMonthIndex));
                 tvPrevMonth.setAlpha(currentMonthIndex == 0 ? 0.3f : 1f);
                 tvNextMonth.setAlpha(
-                        currentMonthIndex == monthList.size()-1 ? 0.3f : 1f);
-            } else return;
+                        currentMonthIndex == monthList.size() - 1 ? 0.3f : 1f);
+            } else
+                return;
         } else if (newIndex >= currentMonthWeeks.size()) {
             // Go to next month first week
             if (currentMonthIndex < monthList.size() - 1) {
@@ -292,8 +305,9 @@ public class HeatmapFragment extends Fragment {
                 tvCurrentMonth.setText(monthList.get(currentMonthIndex));
                 tvPrevMonth.setAlpha(currentMonthIndex == 0 ? 0.3f : 1f);
                 tvNextMonth.setAlpha(
-                        currentMonthIndex == monthList.size()-1 ? 0.3f : 1f);
-            } else return;
+                        currentMonthIndex == monthList.size() - 1 ? 0.3f : 1f);
+            } else
+                return;
         } else {
             currentWeekIndex = newIndex;
         }
@@ -302,12 +316,13 @@ public class HeatmapFragment extends Fragment {
     }
 
     private void refreshWeekView() {
-        if (currentMonthWeeks.isEmpty()) return;
+        if (currentMonthWeeks.isEmpty())
+            return;
 
         List<String> week = currentMonthWeeks.get(currentWeekIndex);
 
         // ✅ Always show Mon – Sun of this week
-        SimpleDateFormat inFmt  = new SimpleDateFormat(
+        SimpleDateFormat inFmt = new SimpleDateFormat(
                 "dd MMM yyyy", Locale.ENGLISH);
         SimpleDateFormat outFmt = new SimpleDateFormat(
                 "d MMM", Locale.ENGLISH);
@@ -322,18 +337,22 @@ public class HeatmapFragment extends Fragment {
                 last = outFmt.format(inFmt.parse(week.get(6)));
             else if (!week.isEmpty())
                 last = outFmt.format(inFmt.parse(
-                        week.get(week.size()-1)));
-        } catch (Exception e) { e.printStackTrace(); }
+                        week.get(week.size() - 1)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         tvCurrentWeek.setText(first + " – " + last);
         // Week arrows
         tvPrevWeek.setAlpha(
                 (currentWeekIndex == 0 && currentMonthIndex == 0)
-                        ? 0.3f : 1f);
+                        ? 0.3f
+                        : 1f);
         tvNextWeek.setAlpha(
-                (currentWeekIndex == currentMonthWeeks.size()-1
-                        && currentMonthIndex == monthList.size()-1)
-                        ? 0.3f : 1f);
+                (currentWeekIndex == currentMonthWeeks.size() - 1
+                        && currentMonthIndex == monthList.size() - 1)
+                                ? 0.3f
+                                : 1f);
 
         // Build Samsung grid
         buildSamsungGrid(week);
@@ -349,12 +368,13 @@ public class HeatmapFragment extends Fragment {
         List<List<String>> result = new ArrayList<>();
         SimpleDateFormat monthFmt = new SimpleDateFormat(
                 "MMMM yyyy", Locale.ENGLISH);
-        SimpleDateFormat dateFmt  = new SimpleDateFormat(
+        SimpleDateFormat dateFmt = new SimpleDateFormat(
                 "dd MMM yyyy", Locale.ENGLISH);
 
         for (List<String> week : allWeeks) {
             for (String dateStr : week) {
-                if (dateStr.isEmpty()) continue;
+                if (dateStr.isEmpty())
+                    continue;
                 try {
                     Calendar c = Calendar.getInstance();
                     c.setTime(dateFmt.parse(dateStr));
@@ -363,7 +383,9 @@ public class HeatmapFragment extends Fragment {
                         result.add(week);
                         break;
                     }
-                } catch (Exception e) { e.printStackTrace(); }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
         return result;
@@ -375,20 +397,22 @@ public class HeatmapFragment extends Fragment {
     private void buildSamsungGrid(List<String> week) {
         samsungHeatmapGrid.removeAllViews();
 
-        float density   = getResources().getDisplayMetrics().density;
+        float density = getResources().getDisplayMetrics().density;
         int blockHeight = (int) (18 * density);
         int blockMargin = (int) (1.5f * density);
 
         // Pad to 7 days
         List<String> paddedWeek = new ArrayList<>(week);
-        while (paddedWeek.size() < 7) paddedWeek.add("");
+        while (paddedWeek.size() < 7)
+            paddedWeek.add("");
 
         Gson gson = new Gson();
 
         for (int day = 0; day < 7; day++) {
             String dateStr = paddedWeek.get(day);
             DailyStats stats = dateStr.isEmpty()
-                    ? null : statsMap.get(dateStr);
+                    ? null
+                    : statsMap.get(dateStr);
 
             // Get hourly data
             long[] hourlyMins = new long[24];
@@ -399,7 +423,8 @@ public class HeatmapFragment extends Fragment {
                                 stats.hourlyDataJson, long[].class);
                         if (parsed != null && parsed.length == 24)
                             hourlyMins = parsed;
-                        else hourlyMins = estimateHourlyDistribution(stats);
+                        else
+                            hourlyMins = estimateHourlyDistribution(stats);
                     } catch (Exception e) {
                         hourlyMins = estimateHourlyDistribution(stats);
                     }
@@ -412,18 +437,16 @@ public class HeatmapFragment extends Fragment {
             LinearLayout row = new LinearLayout(getContext());
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            LinearLayout.LayoutParams rowParams =
-                    new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
             rowParams.setMargins(0, blockMargin, 0, blockMargin);
             row.setLayoutParams(rowParams);
 
             // Day label
             TextView dayLabel = new TextView(getContext());
-            LinearLayout.LayoutParams labelParams =
-                    new LinearLayout.LayoutParams(
-                            (int) (32 * density), blockHeight);
+            LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
+                    (int) (32 * density), blockHeight);
             dayLabel.setLayoutParams(labelParams);
             dayLabel.setText(DAY_LABELS[day]);
             dayLabel.setTextSize(9f);
@@ -439,9 +462,7 @@ public class HeatmapFragment extends Fragment {
 
                 View block = new View(getContext());
 
-
-                LinearLayout.LayoutParams blockParams =
-                        new LinearLayout.LayoutParams(0, blockHeight, 1f);
+                LinearLayout.LayoutParams blockParams = new LinearLayout.LayoutParams(0, blockHeight, 1f);
                 blockParams.setMargins(blockMargin, 0, blockMargin, 0);
                 block.setLayoutParams(blockParams);
 
@@ -471,70 +492,75 @@ public class HeatmapFragment extends Fragment {
         long weekTotal = 0;
         Map<String, Long> appTotals = new HashMap<>();
         Gson gson = new Gson();
-        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
+        Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>() {
+        }.getType();
         long[] dayMins = new long[7];
 
         List<String> paddedWeek = new ArrayList<>(week);
-        while (paddedWeek.size() < 7) paddedWeek.add("");
+        while (paddedWeek.size() < 7)
+            paddedWeek.add("");
 
         for (int i = 0; i < 7; i++) {
             String dateStr = paddedWeek.get(i);
-            if (dateStr.isEmpty()) continue;
+            if (dateStr.isEmpty())
+                continue;
             DailyStats stats = statsMap.get(dateStr);
-            if (stats == null) continue;
+            if (stats == null)
+                continue;
 
-            weekTotal  += stats.totalUsageTime;
-            dayMins[i]  = stats.totalUsageTime / 60000;
+            weekTotal += stats.totalUsageTime;
+            dayMins[i] = stats.totalUsageTime / 60000;
 
             if (stats.topAppsJson != null) {
                 try {
-                    List<MainActivity.AppUsageInfo> apps =
-                            gson.fromJson(stats.topAppsJson, listType);
+                    List<MainActivity.AppUsageInfo> apps = gson.fromJson(stats.topAppsJson, listType);
                     for (MainActivity.AppUsageInfo app : apps) {
                         appTotals.put(app.name,
                                 appTotals.getOrDefault(app.name, 0L)
                                         + app.usageTime);
                     }
-                } catch (Exception e) { e.printStackTrace(); }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 
         // Total
         long totalMins = weekTotal / 60000;
-        tvWeekTotal.setText((totalMins/60) + "h " + (totalMins%60) + "m");
+        tvWeekTotal.setText((totalMins / 60) + "h " + (totalMins % 60) + "m");
 
         // Top app
         String topApp = "None";
-        long topTime  = 0;
+        long topTime = 0;
         for (Map.Entry<String, Long> e : appTotals.entrySet()) {
             if (e.getValue() > topTime) {
                 topTime = e.getValue();
-                topApp  = e.getKey();
+                topApp = e.getKey();
             }
         }
         long topMins = topTime / 60000;
         tvWeekTopApp.setText(topApp + "\n"
-                + (topMins/60 > 0 ? topMins/60 + "h " : "")
-                + topMins%60 + "m");
+                + (topMins / 60 > 0 ? topMins / 60 + "h " : "")
+                + topMins % 60 + "m");
     }
 
     // ─────────────────────────────────────────
     // STATS CARD
     // ─────────────────────────────────────────
     private void updateStatsCard(int trackedDays, String peakDate,
-                                 long peakUsage, long avgDaily) {
+            long peakUsage, long avgDaily) {
         tvTotalDays.setText(trackedDays + " days");
 
         if (!peakDate.isEmpty()) {
             long peakMins = peakUsage / 60000;
             tvPeakDay.setText(peakDate + "  —  "
-                    + peakMins/60 + "h " + peakMins%60 + "m");
+                    + peakMins / 60 + "h " + peakMins % 60 + "m");
         } else {
             tvPeakDay.setText("No data yet");
         }
 
         long avgMins = avgDaily / 60000;
-        tvAvgDaily.setText(avgMins/60 + "h " + avgMins%60 + "m");
+        tvAvgDaily.setText(avgMins / 60 + "h " + avgMins % 60 + "m");
     }
 
     // ─────────────────────────────────────────
@@ -542,18 +568,19 @@ public class HeatmapFragment extends Fragment {
     // ─────────────────────────────────────────
     private long[] estimateHourlyDistribution(DailyStats stats) {
         long[] hourlyMins = new long[24];
-        if (stats.totalUsageTime <= 0) return hourlyMins;
+        if (stats.totalUsageTime <= 0)
+            return hourlyMins;
         long totalMins = stats.totalUsageTime / 60000;
 
-        int[]   activeHours = {8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
-        float[] weights     = {1,1,1.5f,1.5f,2,2,2,2,2.5f,2.5f,3,3,3,2.5f,2,1.5f};
+        int[] activeHours = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 };
+        float[] weights = { 1, 1, 1.5f, 1.5f, 2, 2, 2, 2, 2.5f, 2.5f, 3, 3, 3, 2.5f, 2, 1.5f };
 
         float totalWeight = 0;
-        for (float w : weights) totalWeight += w;
+        for (float w : weights)
+            totalWeight += w;
 
         for (int i = 0; i < activeHours.length; i++) {
-            hourlyMins[activeHours[i]] =
-                    Math.round(totalMins * (weights[i] / totalWeight));
+            hourlyMins[activeHours[i]] = Math.round(totalMins * (weights[i] / totalWeight));
         }
         return hourlyMins;
     }
@@ -562,12 +589,17 @@ public class HeatmapFragment extends Fragment {
     // COLOR SCALE
     // ─────────────────────────────────────────
     private int getHeatColor(long minutes) {
-        if (minutes <= 0)   return COLOR_EMPTY;
-        if (minutes <= 15)  return COLOR_LEVEL1;
-        if (minutes <= 30)  return COLOR_LEVEL2;
-        if (minutes <= 45)  return COLOR_LEVEL3;
+        if (minutes <= 0)
+            return COLOR_EMPTY;
+        if (minutes <= 15)
+            return COLOR_LEVEL1;
+        if (minutes <= 30)
+            return COLOR_LEVEL2;
+        if (minutes <= 45)
+            return COLOR_LEVEL3;
         return COLOR_LEVEL4;
     }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -575,7 +607,7 @@ public class HeatmapFragment extends Fragment {
         if (!monthList.isEmpty()) {
             SimpleDateFormat monthFmt = new SimpleDateFormat(
                     "MMMM yyyy", Locale.ENGLISH);
-            SimpleDateFormat dateFmt  = new SimpleDateFormat(
+            SimpleDateFormat dateFmt = new SimpleDateFormat(
                     "dd MMM yyyy", Locale.ENGLISH);
             dateFmt.setTimeZone(TimeZone.getDefault());
 
@@ -588,17 +620,19 @@ public class HeatmapFragment extends Fragment {
             if (monthIdx >= 0) {
                 currentMonthIndex = monthIdx;
                 currentMonthWeeks = getWeeksForMonth(nowMonth);
-                currentWeekIndex  = 0;
+                currentWeekIndex = 0;
                 for (int i = 0; i < currentMonthWeeks.size(); i++) {
                     if (currentMonthWeeks.get(i).contains(todayStr)) {
                         currentWeekIndex = i;
                         break;
                     }
                 }
-                if (getView() != null) refreshMonthView();
+                if (getView() != null)
+                    refreshMonthView();
             }
         }
     }
+
     private void showTinyPopup(View anchor, String dateStr, int hour) {
         // 1. Inflate and increase Popup size in code
         View popupView = LayoutInflater.from(getContext()).inflate(R.layout.popup_usage_detail, null);
@@ -649,30 +683,67 @@ public class HeatmapFragment extends Fragment {
             PackageManager pm = requireContext().getPackageManager();
             int count = 0;
             for (Map.Entry<String, Long> entry : sortedList) {
-                if (count >= 3) break;
+                if (count >= 3)
+                    break;
                 addTinyAppRow(container, entry.getKey(), entry.getValue() / 60000, pm);
                 count++;
             }
 
+            // Fallback: if live events are gone, show top apps from database
             if (count == 0) {
-                TextView tv = new TextView(getContext());
-                tv.setText("No activity this hour");
-                tv.setTextSize(12);
-                container.addView(tv);
+                DailyStats fallbackStats = statsMap.get(dateStr);
+                if (fallbackStats != null && fallbackStats.topAppsJson != null
+                        && !fallbackStats.topAppsJson.isEmpty()) {
+                    Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>() {
+                    }.getType();
+                    List<MainActivity.AppUsageInfo> apps = new Gson().fromJson(fallbackStats.topAppsJson, listType);
+                    if (apps != null && !apps.isEmpty()) {
+                        TextView header = new TextView(getContext());
+                        header.setText("Top apps this day:");
+                        header.setTextSize(11);
+                        header.setTextColor(Color.parseColor("#888888"));
+                        container.addView(header);
+
+                        int fallbackCount = 0;
+                        for (MainActivity.AppUsageInfo app : apps) {
+                            if (fallbackCount >= 3)
+                                break;
+                            // Try to resolve package name for icon; app.name is already a label
+                            TextView tv = new TextView(getContext());
+                            long mins = app.usageTime / 60000;
+                            tv.setText(app.name + " (" + mins + "m)");
+                            tv.setTextSize(14);
+                            tv.setTextColor(Color.parseColor("#1c1554"));
+                            tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                            tv.setPadding(0, 8, 0, 8);
+                            container.addView(tv);
+                            fallbackCount++;
+                        }
+                    }
+                } else {
+                    TextView tv = new TextView(getContext());
+                    tv.setText("No activity this hour");
+                    tv.setTextSize(12);
+                    container.addView(tv);
+                }
             }
 
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // 3. Make the Popup larger (Width: 220dp)
         float density = getResources().getDisplayMetrics().density;
-        PopupWindow popup = new PopupWindow(popupView, (int)(220 * density), ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        PopupWindow popup = new PopupWindow(popupView, (int) (220 * density), ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
         popup.setElevation(20f);
 
         // Position it slightly higher so it's not hidden by fingers
-        popup.showAsDropDown(anchor, 0, -anchor.getHeight() - (int)(180 * density));
+        popup.showAsDropDown(anchor, 0, -anchor.getHeight() - (int) (180 * density));
     }
 
-    private void addTinyAppRow(LinearLayout container, String pkgName, long mins, android.content.pm.PackageManager pm) {
+    private void addTinyAppRow(LinearLayout container, String pkgName, long mins,
+            android.content.pm.PackageManager pm) {
         // 1. Create a horizontal layout for the row
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -685,8 +756,8 @@ public class HeatmapFragment extends Fragment {
             // 2. Add App Icon
             android.widget.ImageView icon = new android.widget.ImageView(getContext());
             LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(
-                    (int)(24 * getResources().getDisplayMetrics().density),
-                    (int)(24 * getResources().getDisplayMetrics().density));
+                    (int) (24 * getResources().getDisplayMetrics().density),
+                    (int) (24 * getResources().getDisplayMetrics().density));
             iconParams.setMargins(0, 0, 12, 0);
             icon.setLayoutParams(iconParams);
             icon.setImageDrawable(pm.getApplicationIcon(ai));

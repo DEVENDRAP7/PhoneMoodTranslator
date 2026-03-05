@@ -45,8 +45,7 @@ public class UsageWorker extends Worker {
             "com.twitter.android",
             "com.zhiliaoapp.musically", // TikTok
             "com.whatsapp",
-            "com.snapchat.android"
-    );
+            "com.snapchat.android");
 
     public UsageWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -80,13 +79,17 @@ public class UsageWorker extends Worker {
         long startTime = calendar.getTimeInMillis();
         long endTime = System.currentTimeMillis();
 
+        // ✅ MIDNIGHT FIX: Query from 6 hours before midnight to catch running apps
+        long queryStart = startTime - (6 * 60 * 60 * 1000);
+
         UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
-        UsageEvents events = usm.queryEvents(startTime, endTime);
+        UsageEvents events = usm.queryEvents(queryStart, endTime);
 
         long[] hourlyMillis = new long[24];
-        int[] appSwitchCount = new int[]{0};
+        int[] appSwitchCount = new int[] { 0 };
 
-        Map<String, Long> appDurations = calculateAppDurations(events, startTime, endTime, hourlyMillis, appSwitchCount);
+        Map<String, Long> appDurations = calculateAppDurations(events, startTime, endTime, hourlyMillis,
+                appSwitchCount);
 
         List<AppUsageInfo> appList = new ArrayList<>();
         long totalUsageMillis = 0;
@@ -119,15 +122,13 @@ public class UsageWorker extends Worker {
         int usageMinutes = (int) (totalUsageMillis / (1000 * 60));
         boolean usedAtNight = com.devendrap7.phonemoodtranslator.utils.MoodCalculator.isLateNightUsage();
 
-        // ✅ Calculate mood using shared calculator
-        com.devendrap7.phonemoodtranslator.models.MoodResult mood =
-                com.devendrap7.phonemoodtranslator.utils.MoodCalculator.calculateMood(
+        com.devendrap7.phonemoodtranslator.models.MoodResult mood = com.devendrap7.phonemoodtranslator.utils.MoodCalculator
+                .calculateMood(
                         usageMinutes, appSwitchCount[0], usedAtNight);
 
         double totalHours = totalUsageMillis / (1000.0 * 60 * 60);
         double socialHours = socialUsageMillis / (1000.0 * 60 * 60);
 
-        // ✅ Pass mood to database
         updateDatabase(context, totalUsageMillis, currentMonth, currentYear,
                 topAppsJson, hourlyDataJson, mood);
 
@@ -178,10 +179,10 @@ public class UsageWorker extends Worker {
     }
 
     private Map<String, Long> calculateAppDurations(UsageEvents events,
-                                                    long startTime,
-                                                    long endTime,
-                                                    long[] hourlyMillis,
-                                                    int[] appSwitchCount) {
+            long startTime,
+            long endTime,
+            long[] hourlyMillis,
+            int[] appSwitchCount) {
         Map<String, Long> durations = new HashMap<>();
         Map<String, Long> startTimes = new HashMap<>();
         java.util.HashSet<String> uniqueApps = new java.util.HashSet<>();
@@ -195,16 +196,18 @@ public class UsageWorker extends Worker {
 
             if (type == UsageEvents.Event.MOVE_TO_FOREGROUND) {
                 startTimes.put(pkg, time);
-                if (time >= startTime) uniqueApps.add(pkg);
+                if (time >= startTime)
+                    uniqueApps.add(pkg);
             } else if (type == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                 if (startTimes.containsKey(pkg)) {
                     long start = startTimes.get(pkg);
-                    long duration = time - start;
+                    long effectiveStart = Math.max(start, startTime);
+                    long duration = time - effectiveStart;
 
                     if (duration > 0) {
                         durations.put(pkg, durations.getOrDefault(pkg, 0L) + duration);
                         distributeToHourlyBuckets(hourlyMillis,
-                                Math.max(start, startTime), time);
+                                effectiveStart, time);
                     }
                     startTimes.remove(pkg);
                 }
@@ -226,15 +229,15 @@ public class UsageWorker extends Worker {
         appSwitchCount[0] = uniqueApps.size();
         return durations;
     }
-    
+
     private String formatHoursForNotification(double hours) {
         if (hours < 1.0) {
-            int mins = (int)(hours * 60);
+            int mins = (int) (hours * 60);
             return mins + " minutes";
         }
 
         int wholeHours = (int) hours;
-        int mins = (int)((hours - wholeHours) * 60);
+        int mins = (int) ((hours - wholeHours) * 60);
 
         if (mins == 0) {
             return wholeHours + " hour" + (wholeHours > 1 ? "s" : "");
@@ -242,11 +245,12 @@ public class UsageWorker extends Worker {
             return wholeHours + "h " + mins + "min";
         }
     }
+
     private void updateDatabase(Context context, long totalTime,
-                                int month, int year,
-                                String topAppsJson,
-                                String hourlyDataJson,
-                                com.devendrap7.phonemoodtranslator.models.MoodResult mood) {
+            int month, int year,
+            String topAppsJson,
+            String hourlyDataJson,
+            com.devendrap7.phonemoodtranslator.models.MoodResult mood) {
         AppDatabase db = AppDatabase.getDatabase(context);
         SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
         sdf.setTimeZone(TimeZone.getDefault());
@@ -274,10 +278,9 @@ public class UsageWorker extends Worker {
             DailyStats newStats = new DailyStats(
                     today, month, year, currentDay, timestamp,
                     0, totalTime, 0,
-                    mood.emoji, mood.title,  // ✅ Real mood now!
+                    mood.emoji, mood.title, // ✅ Real mood now!
                     topAppsJson,
-                    ""
-            );
+                    "");
             newStats.hourlyDataJson = hourlyDataJson;
             db.statsDao().insert(newStats);
         }
@@ -304,13 +307,16 @@ public class UsageWorker extends Worker {
             cursor = hourEnd + 1;
         }
     }
+
     private void sendAlert(String title, String message) {
         Context context = getApplicationContext();
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "DigiPulse Alerts", NotificationManager.IMPORTANCE_HIGH);
-            if (manager != null) manager.createNotificationChannel(channel);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "DigiPulse Alerts",
+                    NotificationManager.IMPORTANCE_HIGH);
+            if (manager != null)
+                manager.createNotificationChannel(channel);
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -321,6 +327,7 @@ public class UsageWorker extends Worker {
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setAutoCancel(true);
 
-        if (manager != null) manager.notify(1001, builder.build());
+        if (manager != null)
+            manager.notify(1001, builder.build());
     }
 }

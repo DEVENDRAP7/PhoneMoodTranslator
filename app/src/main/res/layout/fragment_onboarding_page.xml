@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="40dp">
+
+        <!-- Big Emoji / Icon -->
+        <TextView
+            android:id="@+id/tvPageEmoji"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="80sp"
+            android:gravity="center"
+            android:layout_marginBottom="32dp"/>
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tvPageTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="#1c1554"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Description -->
+        <TextView
+            android:id="@+id/tvPageDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textColor="#555555"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.6"
+            android:layout_marginBottom="36dp"/>
+
+        <!-- Permission/Action Button (optional per page) -->
+        <Button
+            android:id="@+id/btnPageAction"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Allow"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:backgroundTint="#F7E7CE"
+            app:cornerRadius="16dp"
+            android:visibility="gone"/>
+
+        <!-- Granted indicator -->
+        <TextView
+            android:id="@+id/tvGranted"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✅ Permission granted"
+            android:textSize="14sp"
+            android:textColor="#2e7d32"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+</ScrollView>

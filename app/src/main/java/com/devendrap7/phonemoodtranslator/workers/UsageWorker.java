@@ -133,17 +133,20 @@ public class UsageWorker extends Worker {
                 topAppsJson, hourlyDataJson, mood);
 
         // Alerts
+        String selfNote = prefs.getString("future_note", "").trim();
+        String noteSuffix = selfNote.isEmpty() ? "" : "\n\n📝 You wrote: \"" + selfNote + "\"";
+
         if (System.currentTimeMillis() - lastAlertTime >= ALERT_COOLDOWN) {
             if (alertSocialEnabled && socialHours > limitSocial) {
                 sendAlert("📱 Social Media Warning",
                         "You've spent " + formatHoursForNotification(socialHours) +
-                                " on social media. Your pet is getting worried!");
+                                " on social media. Your pet is getting worried!" + noteSuffix);
                 prefs.edit().putLong("last_alert_timestamp",
                         System.currentTimeMillis()).apply();
             } else if (alertTotalEnabled && totalHours > limitTotal) {
                 sendAlert("⚠️ High Screen Time",
                         "Total usage is " + formatHoursForNotification(totalHours) +
-                                ". Time for a real-world break?");
+                                ". Time for a real-world break?" + noteSuffix);
                 prefs.edit().putLong("last_alert_timestamp",
                         System.currentTimeMillis()).apply();
             }
@@ -323,6 +326,7 @@ public class UsageWorker extends Worker {
                 .setSmallIcon(R.drawable.ic_notification) // ENSURE THIS EXISTS
                 .setContentTitle(title)
                 .setContentText(message)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setAutoCancel(true);

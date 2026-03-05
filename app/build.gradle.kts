@@ -50,4 +50,5 @@ dependencies {
     // JSON Converter (To save lists of apps)
     implementation("com.google.code.gson:gson:2.13.2")
     implementation("androidx.work:work-runtime:2.9.0")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
 }

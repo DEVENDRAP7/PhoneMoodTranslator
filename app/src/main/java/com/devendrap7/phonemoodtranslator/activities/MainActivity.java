@@ -11,13 +11,18 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,6 +68,9 @@ public class MainActivity extends AppCompatActivity {
     private Map<String, String> installedAppsCache = new HashMap<>();
     private PulseBackgroundView pulseBackground;
     private PulseCoreView pulseCoreView;
+    private LinearLayout popupCardsContainer;
+    private boolean rateCardDismissedThisSession = false;
+    private int homeScreenVisitCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         initializeViews();
+        popupCardsContainer = findViewById(R.id.popupCardsContainer);
+
         // setupTheme();
         cacheInstalledApps();
         setupClickListeners();
@@ -125,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         if (hasUsageAccessPermission()) {
             moodViewModel.readUsageDataAndRefresh(this);
         }
+        showPopupCards();
     }
 
     private void initializeViews() {
@@ -151,7 +162,8 @@ public class MainActivity extends AppCompatActivity {
         btnHistory.setOnClickListener(v -> {
             readUsageDataSilent(); // ✅ saves only, no navigation
             startActivity(new Intent(this, HistoryActivity.class));
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            overrideActivityTransition(OVERRIDE_TRANSITION_OPEN,
+                    android.R.anim.fade_in, android.R.anim.fade_out);
         });
     }
 
@@ -454,7 +466,8 @@ public class MainActivity extends AppCompatActivity {
         moodViewModel.readUsageDataAndRefresh(this);
 
         startActivity(intent);
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        overrideActivityTransition(OVERRIDE_TRANSITION_OPEN,
+                android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     private void saveToDatabase(MoodResult mood, long totalUsageTime,
@@ -526,7 +539,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void onSwipeUp() {
         startActivity(new Intent(MainActivity.this, MoodGalleryActivity.class));
-        overridePendingTransition(R.anim.slide_in_up, R.anim.stay);
+        overrideActivityTransition(OVERRIDE_TRANSITION_OPEN,
+                R.anim.slide_in_up, R.anim.stay);
     }
 
     public static class AppUsageInfo {
@@ -537,5 +551,146 @@ public class MainActivity extends AppCompatActivity {
             this.name = name;
             this.usageTime = usageTime;
         }
+    }
+
+    // ── Popup Cards System ─────────────────────────────────────────────────────
+
+    private void showPopupCards() {
+        if (popupCardsContainer == null) return;
+        popupCardsContainer.removeAllViews();
+
+        // 1. Permission cards — always shown if permission is missing
+        if (!hasUsageAccess()) {
+            addPermissionCard("📊", "Usage Access Required",
+                    "Core permission for mood analysis",
+                    () -> startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)));
+        }
+
+        if (!hasNotifPermission()) {
+            addPermissionCard("🔔", "Notifications Disabled",
+                    "Enable alerts for screen time reminders",
+                    () -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissions(
+                                    new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 201);
+                        } else {
+                            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                            startActivity(intent);
+                        }
+                    });
+        }
+
+        if (!isBatteryOptDisabled()) {
+            addPermissionCard("🔋", "Background Tracking Off",
+                    "Enable for automatic usage tracking",
+                    () -> {
+                        try {
+                            Intent intent = new Intent(
+                                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            startActivity(new Intent(Settings.ACTION_SETTINGS));
+                        }
+                    });
+        }
+
+        // 2. Rate App card — random appearances
+        showRateAppCardIfNeeded();
+
+        // Hide the scroll container if empty
+        View scrollView = findViewById(R.id.popupCardsScroll);
+        if (scrollView != null) {
+            scrollView.setVisibility(
+                    popupCardsContainer.getChildCount() > 0 ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void addPermissionCard(String emoji, String title, String desc, Runnable action) {
+        View card = LayoutInflater.from(this)
+                .inflate(R.layout.popup_permission_card, popupCardsContainer, false);
+
+        ((TextView) card.findViewById(R.id.tvPermissionEmoji)).setText(emoji);
+        ((TextView) card.findViewById(R.id.tvPermissionTitle)).setText(title);
+        ((TextView) card.findViewById(R.id.tvPermissionDesc)).setText(desc);
+        card.findViewById(R.id.btnGrantPermission).setOnClickListener(v -> action.run());
+
+        // Slide-in animation
+        card.setAlpha(0f);
+        card.setTranslationY(-30f);
+        popupCardsContainer.addView(card);
+        card.animate().alpha(1f).translationY(0f).setDuration(400)
+                .setStartDelay(popupCardsContainer.getChildCount() * 100L).start();
+    }
+
+    private void showRateAppCardIfNeeded() {
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        boolean hasRated = prefs.getBoolean("has_rated_app", false);
+        if (hasRated || rateCardDismissedThisSession) return;
+
+        homeScreenVisitCount++;
+
+        // Show every 3rd navigation to home screen (3rd, 6th, 9th...)
+        if (homeScreenVisitCount % 3 != 0) return;
+
+        View card = LayoutInflater.from(this)
+                .inflate(R.layout.popup_rate_app, popupCardsContainer, false);
+
+        card.findViewById(R.id.btnRateApp).setOnClickListener(v -> {
+            prefs.edit().putBoolean("has_rated_app", true).apply();
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("market://details?id=" + getPackageName())));
+            } catch (Exception e) {
+                startActivity(new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
+            }
+            popupCardsContainer.removeView(card);
+        });
+
+        card.findViewById(R.id.btnDismissRate).setOnClickListener(v -> {
+            rateCardDismissedThisSession = true;
+            card.animate().alpha(0f).translationX(300f).setDuration(300)
+                    .withEndAction(() -> popupCardsContainer.removeView(card)).start();
+        });
+
+        // Slide-in animation
+        card.setAlpha(0f);
+        card.setTranslationY(-30f);
+        popupCardsContainer.addView(card);
+        card.animate().alpha(1f).translationY(0f).setDuration(500)
+                .setStartDelay(popupCardsContainer.getChildCount() * 100L).start();
+    }
+
+    // ── Permission Check Helpers ───────────────────────────────────────────────
+
+    private boolean hasUsageAccess() {
+        try {
+            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+            int mode = appOps.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(), getPackageName());
+            return mode == AppOpsManager.MODE_ALLOWED;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean hasNotifPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return checkSelfPermission(
+                    android.Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // Pre-13: notifications on by default
+    }
+
+    private boolean isBatteryOptDisabled() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            return pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+        }
+        return true; // Pre-M: no restriction
     }
 }

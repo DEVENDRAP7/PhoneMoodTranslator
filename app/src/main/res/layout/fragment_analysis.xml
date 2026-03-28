@@ -85,22 +85,10 @@
             app:cardElevation="4dp"
             app:cardBackgroundColor="#FFFFFF">
 
-            <FrameLayout
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/pieChartApps"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <com.github.mikephil.charting.charts.PieChart
-                    android:id="@+id/pieChartApps"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <com.devendrap7.phonemoodtranslator.views.MoodPetView
-                    android:id="@+id/analysisMascot"
-                    android:layout_width="110dp"
-                    android:layout_height="110dp"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="10dp"/>
-            </FrameLayout>
+                android:layout_height="match_parent" />
         </androidx.cardview.widget.CardView>
 
         <TextView

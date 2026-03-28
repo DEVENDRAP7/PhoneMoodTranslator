@@ -14,7 +14,11 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.devendrap7.phonemoodtranslator.viewmodels.MoodViewModel;
@@ -50,8 +54,16 @@ public class ResultActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
+
+        // Apply insets so content doesn't overlap system bars
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rootLayout), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         // 1. Initialize Views First
         initializeViews();
@@ -182,7 +194,8 @@ public class ResultActivity extends AppCompatActivity {
         // Done button
         btnDone.setOnClickListener(v -> {
             finish();
-            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE,
+                    android.R.anim.fade_in, android.R.anim.fade_out);
         });
     }
 

@@ -7,13 +7,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
@@ -44,12 +45,11 @@ public class HistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
         // ✅ Make status bar match your app background
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(Color.parseColor("#F7E7CE"));
-            // ✅ Make status bar icons dark (since background is light)
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+        getWindow().setStatusBarColor(Color.parseColor("#F7E7CE"));
+        // ✅ Make status bar icons dark (since background is light)
+        WindowInsetsControllerCompat controller =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        controller.setAppearanceLightStatusBars(true);
 
         // 1. Initialize Views
         viewPager = findViewById(R.id.viewPager);
@@ -174,7 +174,10 @@ public class HistoryActivity extends AppCompatActivity {
         // ✅ 2. Match Status Bar to the Purple Top
         Window window = getWindow();
         window.setStatusBarColor(topColor);
-
+        // ✅ Update status bar icon appearance based on background
+        WindowInsetsControllerCompat statusBarController =
+                WindowCompat.getInsetsController(window, window.getDecorView());
+        statusBarController.setAppearanceLightStatusBars(!isColorDark(topColor));
 
         // ✅ 3. Ensure ViewPager/Activity Root is the Beige Bottom
 

@@ -22,7 +22,8 @@ public class DailyStats {
     public String moodTitle;
     public String topAppsJson;
     public String selfNote;
-    public String hourlyDataJson; // ✅ NEW — 24 values, mins per hour
+    public String hourlyDataJson; // ✅ 24 values, mins per hour
+    public String hourlyAppsJson; // ✅ NEW — {"0": [{"name":"Instagram","mins":15},...], "1": [...], ...}
 
     public DailyStats(@NonNull String date, int month, int year,
                       int dayOfMonth, long dateTimestamp,
@@ -42,5 +43,6 @@ public class DailyStats {
         this.topAppsJson   = topAppsJson;
         this.selfNote      = selfNote;
         this.hourlyDataJson = null; // filled later
+        this.hourlyAppsJson = null; // ✅ NEW — filled later
     }
 }

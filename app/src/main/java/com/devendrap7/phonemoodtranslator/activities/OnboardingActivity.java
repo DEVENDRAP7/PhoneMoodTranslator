@@ -16,8 +16,15 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.devendrap7.phonemoodtranslator.R;
@@ -73,6 +80,7 @@ public class OnboardingActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
 
         if (isOnboardingCompleted()) {
@@ -82,12 +90,18 @@ public class OnboardingActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_onboarding_simple);
 
+        // Apply insets so content doesn't overlap system bars
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
         // Status bar styling
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(Color.parseColor("#F7E7CE"));
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
+        getWindow().setStatusBarColor(Color.parseColor("#F7E7CE"));
+        WindowInsetsControllerCompat controller =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        controller.setAppearanceLightStatusBars(true);
 
         viewPager = findViewById(R.id.viewPager);
         btnNext = findViewById(R.id.btnNext);
@@ -97,6 +111,7 @@ public class OnboardingActivity extends AppCompatActivity
         adapter = new OnboardingPagerAdapter(pages, this);
         viewPager.setAdapter(adapter);
         viewPager.setUserInputEnabled(false); // manual navigation only
+        setupBackNavigation();
 
         buildDots(pages.size(), 0);
         updateButtonState(0);
@@ -265,15 +280,22 @@ public class OnboardingActivity extends AppCompatActivity
     private void navigateToMain() {
         startActivity(new Intent(this, MainActivity.class));
         finish();
-        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE,
+                    android.R.anim.fade_in, android.R.anim.fade_out);
+        }
     }
 
-    @Override
-    public void onBackPressed() {
-        // Allow going back within onboarding pages
-        if (viewPager != null && viewPager.getCurrentItem() > 0) {
-            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
-        }
-        // Block going back from the first page
+    private void setupBackNavigation() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // Allow going back within onboarding pages
+                if (viewPager != null && viewPager.getCurrentItem() > 0) {
+                    viewPager.setCurrentItem(viewPager.getCurrentItem() - 1, true);
+                }
+                // Block going back from the first page
+            }
+        });
     }
 }

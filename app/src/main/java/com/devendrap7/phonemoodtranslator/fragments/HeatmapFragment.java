@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import com.devendrap7.phonemoodtranslator.workers.UsageWorker;
 
 public class HeatmapFragment extends Fragment {
 
@@ -633,11 +634,11 @@ public class HeatmapFragment extends Fragment {
         }
     }
 
+    // ✅ FIXED VERSION - Replace the showTinyPopup() method in HeatmapFragment.java
+
     private void showTinyPopup(View anchor, String dateStr, int hour) {
-        // 1. Inflate and increase Popup size in code
         View popupView = LayoutInflater.from(getContext()).inflate(R.layout.popup_usage_detail, null);
 
-        // 2. Set Time Range Header
         TextView tvTime = popupView.findViewById(R.id.popupTime);
         tvTime.setText(hour + ":00 - " + (hour + 1) + ":00");
 
@@ -654,8 +655,9 @@ public class HeatmapFragment extends Fragment {
             long start = cal.getTimeInMillis();
             long end = start + (3600 * 1000);
 
-            // ✅ QUERY EVENTS (Accurate for the specific hour)
-            UsageStatsManager usm = (UsageStatsManager) requireContext().getSystemService(Context.USAGE_STATS_SERVICE);
+            // ✅ APPROACH 1: Try live query first (works for recent ~7 days)
+            UsageStatsManager usm = (UsageStatsManager) requireContext()
+                    .getSystemService(Context.USAGE_STATS_SERVICE);
             UsageEvents events = usm.queryEvents(start, end);
 
             Map<String, Long> hourUsageMap = new HashMap<>();
@@ -676,71 +678,83 @@ public class HeatmapFragment extends Fragment {
                 }
             }
 
-            // Sort and take Top 3
             List<Map.Entry<String, Long>> sortedList = new ArrayList<>(hourUsageMap.entrySet());
             sortedList.sort((a, b) -> b.getValue().compareTo(a.getValue()));
 
             PackageManager pm = requireContext().getPackageManager();
             int count = 0;
             for (Map.Entry<String, Long> entry : sortedList) {
-                if (count >= 3)
-                    break;
+                if (count >= 3) break;
                 addTinyAppRow(container, entry.getKey(), entry.getValue() / 60000, pm);
                 count++;
             }
 
-            // Fallback: if live events are gone, show top apps from database
+            // ✅ APPROACH 2: Use database hourlyAppsJson (works for ALL historical data)
             if (count == 0) {
-                DailyStats fallbackStats = statsMap.get(dateStr);
-                if (fallbackStats != null && fallbackStats.topAppsJson != null
-                        && !fallbackStats.topAppsJson.isEmpty()) {
-                    Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>() {
-                    }.getType();
-                    List<MainActivity.AppUsageInfo> apps = new Gson().fromJson(fallbackStats.topAppsJson, listType);
-                    if (apps != null && !apps.isEmpty()) {
-                        TextView header = new TextView(getContext());
-                        header.setText("Top apps this day:");
-                        header.setTextSize(11);
-                        header.setTextColor(Color.parseColor("#888888"));
-                        container.addView(header);
+                DailyStats stats = statsMap.get(dateStr);
+                if (stats != null && stats.hourlyAppsJson != null && !stats.hourlyAppsJson.isEmpty()) {
+                    try {
+                        // ✅ Import this at the top of HeatmapFragment.java:
+                        // import com.devendrap7.phonemoodtranslator.workers.UsageWorker;
 
-                        int fallbackCount = 0;
-                        for (MainActivity.AppUsageInfo app : apps) {
-                            if (fallbackCount >= 3)
-                                break;
-                            // Try to resolve package name for icon; app.name is already a label
-                            TextView tv = new TextView(getContext());
-                            long mins = app.usageTime / 60000;
-                            tv.setText(app.name + " (" + mins + "m)");
-                            tv.setTextSize(14);
-                            tv.setTextColor(Color.parseColor("#1c1554"));
-                            tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-                            tv.setPadding(0, 8, 0, 8);
-                            container.addView(tv);
-                            fallbackCount++;
+                        Type mapType = new TypeToken<Map<String, List<UsageWorker.HourlyAppInfo>>>(){}.getType();
+                        Map<String, List<UsageWorker.HourlyAppInfo>> hourlyApps =
+                                new Gson().fromJson(stats.hourlyAppsJson, mapType);
+
+                        List<UsageWorker.HourlyAppInfo> appsThisHour = hourlyApps.get(String.valueOf(hour));
+
+                        if (appsThisHour != null && !appsThisHour.isEmpty()) {
+                            // Display apps from database
+                            for (UsageWorker.HourlyAppInfo app : appsThisHour) {
+                                TextView tv = new TextView(getContext());
+                                tv.setText("• " + app.name + " (" + app.mins + "m)");
+                                tv.setTextSize(14);
+                                tv.setTextColor(Color.parseColor("#1c1554"));
+                                tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                                tv.setPadding(8, 8, 8, 8);
+                                container.addView(tv);
+                            }
+                        } else {
+                            // No apps this specific hour
+                            showNoDataMessage(container);
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        showNoDataMessage(container);
                     }
                 } else {
-                    TextView tv = new TextView(getContext());
-                    tv.setText("No activity this hour");
-                    tv.setTextSize(12);
-                    container.addView(tv);
+                    // No hourlyAppsJson data available
+                    showNoDataMessage(container);
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            TextView tv = new TextView(getContext());
+            tv.setText("Error loading data");
+            tv.setTextSize(12);
+            tv.setTextColor(Color.parseColor("#888888"));
+            container.addView(tv);
         }
 
-        // 3. Make the Popup larger (Width: 220dp)
         float density = getResources().getDisplayMetrics().density;
-        PopupWindow popup = new PopupWindow(popupView, (int) (220 * density), ViewGroup.LayoutParams.WRAP_CONTENT,
-                true);
+        PopupWindow popup = new PopupWindow(popupView, (int) (220 * density),
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
         popup.setElevation(20f);
-
-        // Position it slightly higher so it's not hidden by fingers
         popup.showAsDropDown(anchor, 0, -anchor.getHeight() - (int) (180 * density));
     }
+
+    // ✅ ADD this helper method:
+    private void showNoDataMessage(LinearLayout container) {
+        TextView tv = new TextView(getContext());
+        tv.setText("No activity this hour");
+        tv.setTextSize(12);
+        tv.setTextColor(Color.parseColor("#888888"));
+        tv.setGravity(Gravity.CENTER);
+        tv.setPadding(0, 16, 0, 16);
+        container.addView(tv);
+    }
+
 
     private void addTinyAppRow(LinearLayout container, String pkgName, long mins,
             android.content.pm.PackageManager pm) {

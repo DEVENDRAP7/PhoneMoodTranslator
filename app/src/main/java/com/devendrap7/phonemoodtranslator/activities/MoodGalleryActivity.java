@@ -9,8 +9,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -29,8 +33,16 @@ public class MoodGalleryActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mood_gallery);
+
+        // Apply insets so content doesn't overlap system bars
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.galleryRoot), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         moodPager = findViewById(R.id.moodPager);
         btnClose = findViewById(R.id.btnClose);
@@ -74,7 +86,8 @@ public class MoodGalleryActivity extends AppCompatActivity {
 
     private void closeGallery() {
         finish();
-        overridePendingTransition(R.anim.stay, R.anim.slide_out_down);
+        overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE,
+                R.anim.stay, R.anim.slide_out_down);
     }
 
     private class SwipeDownListener extends GestureDetector.SimpleOnGestureListener {

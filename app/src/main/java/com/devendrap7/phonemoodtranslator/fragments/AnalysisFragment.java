@@ -4,6 +4,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
@@ -83,7 +84,7 @@ public class AnalysisFragment extends Fragment {
     private View loadingContainer; // The FrameLayout with the pet
     private View mainContentScroll; // The ScrollView with charts
     private MoodPetView loadingPet; // Your custom pet view
-    private MoodPetView analysisMascot;
+
 
     @Nullable
     @Override
@@ -100,7 +101,7 @@ public class AnalysisFragment extends Fragment {
         llAppAnalysisList = view.findViewById(R.id.llAppAnalysisList);
         toggleGroup = view.findViewById(R.id.toggleGroup);
         // If your method looks like: public void onViewCreated(View v, ...)
-        analysisMascot = view.findViewById(R.id.analysisMascot);
+
 
         // B. SETUP LISTENERS
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
@@ -270,10 +271,12 @@ public class AnalysisFragment extends Fragment {
             android.util.Log.d("WEEKLY_DEBUG", "Today stats: "
                     + (todayStats != null ? todayStats.totalUsageTime : "NULL"));
 
+            if (!isAdded()) return;
             preloadIcons(historyStatsList);
 
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return;
                     if (historyStatsList != null && !historyStatsList.isEmpty()) {
                         if (isMonthly) setupBarChartMonthlyGrouped(barChart, historyStatsList);
                         else setupBarChartWeekly(barChart, historyStatsList);
@@ -292,11 +295,6 @@ public class AnalysisFragment extends Fragment {
                     }
 
                     loadingPet.setMoodData(mins);
-                    if (analysisMascot != null) {
-                        analysisMascot.usageMinutes = mins;
-                        analysisMascot.applyMoodColors();
-                        analysisMascot.invalidate();
-                    }
 
                     if (!isContentAlreadyVisible) {
                         loadingContainer.animate()
@@ -572,15 +570,7 @@ public class AnalysisFragment extends Fragment {
         }
         int totalMinutes = (int) (totalMsForMascot / 60000);
 
-        // 2. Update the mascot overlay
-        if (getView() != null) {
-            MoodPetView analysisMascot = getView().findViewById(R.id.analysisMascot);
-            if (analysisMascot != null) {
-                analysisMascot.usageMinutes = totalMinutes;
-                analysisMascot.applyMoodColors();
-                analysisMascot.invalidate();
-            }
-        }
+
 
         customColors.add(Color.parseColor("#cdb4db")); // Deep Purple
         customColors.add(Color.parseColor("#ffc8dd")); //cream
@@ -626,7 +616,9 @@ public class AnalysisFragment extends Fragment {
             customColors.add(Color.LTGRAY); // Grey for empty state
         }
 
-        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE);
+        Context ctx = getContext();
+        if (ctx == null) return;
+        android.content.SharedPreferences prefs = ctx.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE);
         int bgColor = prefs.getInt("bg_color", Color.parseColor("#4A148C"));
         double darkness = 1 - (0.299 * Color.red(bgColor) + 0.587 * Color.green(bgColor) + 0.114 * Color.blue(bgColor)) / 255;
         int dynamicTextColor = (darkness >= 0.5) ? Color.WHITE : Color.BLACK;
@@ -637,10 +629,14 @@ public class AnalysisFragment extends Fragment {
         pieChart.getDescription().setEnabled(false);
         pieChart.setExtraOffsets(5, 10, 5, 5);
 
-        pieChart.setDrawCenterText(false); // REMOVE THIS: We don't want "Mood Summary" hitting the pet
-        pieChart.setHoleRadius(60f);      // Increase hole size so mascot isn't squeezed
-        pieChart.setHoleColor(Color.TRANSPARENT);
-        pieChart.setTransparentCircleRadius(65f);
+        pieChart.setDrawCenterText(true);
+        pieChart.setCenterText("Screen Time\n stats");
+        pieChart.setCenterTextSize(16f);
+        pieChart.setCenterTextTypeface(Typeface.DEFAULT_BOLD);
+        pieChart.setCenterTextColor(Color.parseColor("#333333"));
+        pieChart.setHoleRadius(55f);
+        pieChart.setHoleColor(Color.parseColor("#F7E7CE"));
+        pieChart.setTransparentCircleRadius(60f);
 
         // Match the chart background to your overall layout
         pieChart.setBackgroundColor(Color.parseColor("#F7E7CE"));
@@ -675,21 +671,7 @@ public class AnalysisFragment extends Fragment {
         //pieChart.spin(1000,0,360f,Easing.EaseInOutQuad);
 
 
-        // Create a gentle breathing effect
-        ObjectAnimator scaleX = ObjectAnimator.ofFloat(analysisMascot, "scaleX", 1.20f, 1.05f);
-        ObjectAnimator scaleY = ObjectAnimator.ofFloat(analysisMascot, "scaleY", 1.20f, 1.05f);
 
-        scaleX.setDuration(1000);
-        scaleY.setDuration(1000);
-
-        scaleX.setRepeatCount(ValueAnimator.INFINITE);
-        scaleX.setRepeatMode(ValueAnimator.REVERSE);
-        scaleY.setRepeatCount(ValueAnimator.INFINITE);
-        scaleY.setRepeatMode(ValueAnimator.REVERSE);
-
-        AnimatorSet breath = new AnimatorSet();
-        breath.playTogether(scaleX, scaleY);
-        breath.start();
 
         pieChart.invalidate();
 
@@ -923,7 +905,10 @@ public class AnalysisFragment extends Fragment {
 
 
     private void preloadIcons(List<DailyStats> stats) {
-        PackageManager pm = requireContext().getPackageManager();
+        if (!isAdded()) return;
+        Context ctx = getContext();
+        if (ctx == null) return;
+        PackageManager pm = ctx.getPackageManager();
         List<ApplicationInfo> installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
         Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
         for (DailyStats day : stats) {
@@ -933,7 +918,7 @@ public class AnalysisFragment extends Fragment {
                 if (!iconCache.containsKey(app.name)) {
                     Drawable icon = null;
                     for (ApplicationInfo info : installedApps) { if (pm.getApplicationLabel(info).toString().equals(app.name)) { icon = pm.getApplicationIcon(info); break; } }
-                    iconCache.put(app.name, icon != null ? icon : requireContext().getDrawable(android.R.drawable.sym_def_app_icon));
+                    iconCache.put(app.name, icon != null ? icon : ctx.getDrawable(android.R.drawable.sym_def_app_icon));
                 }
             }
         }

@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -783,7 +785,7 @@ public class AnalysisFragment extends Fragment {
         else{
             progressBar.setProgress(usageMinutes);
         }
-        progressBar.setProgressDrawable(getContext().getDrawable(R.drawable.progress_gradient));
+        progressBar.setProgressDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.progress_gradient));
 
         // Add views in order: Name -> Time -> Progress Bar
         infoLayout.addView(name);
@@ -909,7 +911,12 @@ public class AnalysisFragment extends Fragment {
         Context ctx = getContext();
         if (ctx == null) return;
         PackageManager pm = ctx.getPackageManager();
-        List<ApplicationInfo> installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        List<ApplicationInfo> installedApps;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            installedApps = pm.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
+        } else {
+            installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        }
         Type listType = new TypeToken<ArrayList<MainActivity.AppUsageInfo>>(){}.getType();
         for (DailyStats day : stats) {
             if (day.topAppsJson == null) continue;
@@ -918,7 +925,7 @@ public class AnalysisFragment extends Fragment {
                 if (!iconCache.containsKey(app.name)) {
                     Drawable icon = null;
                     for (ApplicationInfo info : installedApps) { if (pm.getApplicationLabel(info).toString().equals(app.name)) { icon = pm.getApplicationIcon(info); break; } }
-                    iconCache.put(app.name, icon != null ? icon : ctx.getDrawable(android.R.drawable.sym_def_app_icon));
+                    iconCache.put(app.name, icon != null ? icon : ContextCompat.getDrawable(ctx, android.R.drawable.sym_def_app_icon));
                 }
             }
         }

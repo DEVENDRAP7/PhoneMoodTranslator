@@ -20,6 +20,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -97,8 +98,7 @@ public class OnboardingActivity extends AppCompatActivity
             return insets;
         });
 
-        // Status bar styling
-        getWindow().setStatusBarColor(Color.parseColor("#F7E7CE"));
+        // Status bar icon styling (light icons on light background)
         WindowInsetsControllerCompat controller =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         controller.setAppearanceLightStatusBars(true);
@@ -162,7 +162,7 @@ public class OnboardingActivity extends AppCompatActivity
 
             case OnboardingPage.TYPE_NOTIF:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    requestPermissions(
+                    ActivityCompat.requestPermissions(this,
                             new String[] { android.Manifest.permission.POST_NOTIFICATIONS },
                             REQ_NOTIFICATIONS);
                 } else {

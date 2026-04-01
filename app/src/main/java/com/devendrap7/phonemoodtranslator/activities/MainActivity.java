@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -207,7 +208,12 @@ public class MainActivity extends AppCompatActivity {
         PackageManager pm = getPackageManager();
         Intent intent = new Intent(Intent.ACTION_MAIN, null);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> apps = pm.queryIntentActivities(intent, 0);
+        List<ResolveInfo> apps;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            apps = pm.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(0));
+        } else {
+            apps = pm.queryIntentActivities(intent, 0);
+        }
         for (ResolveInfo app : apps) {
             String packageName = app.activityInfo.packageName;
             String appName = app.loadLabel(pm).toString();
@@ -571,7 +577,7 @@ public class MainActivity extends AppCompatActivity {
                     "Enable alerts for screen time reminders",
                     () -> {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            requestPermissions(
+                            ActivityCompat.requestPermissions(this,
                                     new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 201);
                         } else {
                             Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);

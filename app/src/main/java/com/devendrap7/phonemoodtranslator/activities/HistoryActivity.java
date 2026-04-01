@@ -44,8 +44,6 @@ public class HistoryActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
-        // ✅ Make status bar match your app background
-        getWindow().setStatusBarColor(Color.parseColor("#F7E7CE"));
         // ✅ Make status bar icons dark (since background is light)
         WindowInsetsControllerCompat controller =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
@@ -171,9 +169,8 @@ public class HistoryActivity extends AppCompatActivity {
             appBarLayout.setOutlineProvider(null);
         }
 
-        // ✅ 2. Match Status Bar to the Purple Top
+        // ✅ 2. Configure status bar icon appearance
         Window window = getWindow();
-        window.setStatusBarColor(topColor);
         // ✅ Update status bar icon appearance based on background
         WindowInsetsControllerCompat statusBarController =
                 WindowCompat.getInsetsController(window, window.getDecorView());

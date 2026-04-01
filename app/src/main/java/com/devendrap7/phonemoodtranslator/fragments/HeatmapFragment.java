@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -765,7 +766,12 @@ public class HeatmapFragment extends Fragment {
         row.setPadding(0, 8, 0, 8);
 
         try {
-            android.content.pm.ApplicationInfo ai = pm.getApplicationInfo(pkgName, 0);
+            android.content.pm.ApplicationInfo ai;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                ai = pm.getApplicationInfo(pkgName, PackageManager.ApplicationInfoFlags.of(0));
+            } else {
+                ai = pm.getApplicationInfo(pkgName, 0);
+            }
 
             // 2. Add App Icon
             android.widget.ImageView icon = new android.widget.ImageView(getContext());

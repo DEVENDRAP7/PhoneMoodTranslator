@@ -21,6 +21,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.devendrap7.phonemoodtranslator.R;
@@ -114,7 +115,7 @@ public class ControlsFragment extends Fragment {
                               @Override
                               public void onClick(@NonNull View widget) {
                                   Dialog dialog = new Dialog(requireContext(),
-                                          android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
+                                          com.google.android.material.R.style.Theme_MaterialComponents_Light_NoActionBar);
                                   dialog.setContentView(R.layout.dialog_about_fullscreen);
                                   dialog.findViewById(R.id.btnCloseAbout)
                                           .setOnClickListener(cv -> dialog.dismiss());
@@ -161,7 +162,7 @@ public class ControlsFragment extends Fragment {
         currentColor = prefs.getInt("bg_color",
                 Color.parseColor("#4A148C"));
         viewColorPreview.setBackground(
-                requireContext().getDrawable(R.drawable.circle_preview));
+                ContextCompat.getDrawable(requireContext(), R.drawable.circle_preview));
         viewColorPreview.setBackgroundTintList(
                 android.content.res.ColorStateList.valueOf(currentColor));
 
@@ -234,7 +235,7 @@ public class ControlsFragment extends Fragment {
                             currentColor = color;
                             prefs.edit().putInt("bg_color", color).apply();
                             viewColorPreview.setBackground(
-                                    requireContext().getDrawable(R.drawable.circle_preview));
+                                    ContextCompat.getDrawable(requireContext(), R.drawable.circle_preview));
                             viewColorPreview.setBackgroundTintList(
                                     android.content.res.ColorStateList.valueOf(currentColor));
                             Toast.makeText(getContext(),

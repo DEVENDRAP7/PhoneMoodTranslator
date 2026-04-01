@@ -180,7 +180,12 @@ public class UsageWorker extends Worker {
     private String getAppName(Context context, String packageName) {
         try {
             PackageManager pm = context.getPackageManager();
-            ApplicationInfo info = pm.getApplicationInfo(packageName, 0);
+            ApplicationInfo info;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                info = pm.getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(0));
+            } else {
+                info = pm.getApplicationInfo(packageName, 0);
+            }
             return pm.getApplicationLabel(info).toString();
         } catch (Exception e) {
             String[] parts = packageName.split("\\.");
@@ -299,8 +304,13 @@ public class UsageWorker extends Worker {
                 if (mins < 1) continue;  // Skip if less than 1 minute
 
                 try {
-                    String appName = pm.getApplicationLabel(
-                            pm.getApplicationInfo(pkg, 0)).toString();
+                    ApplicationInfo appInfo;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        appInfo = pm.getApplicationInfo(pkg, PackageManager.ApplicationInfoFlags.of(0));
+                    } else {
+                        appInfo = pm.getApplicationInfo(pkg, 0);
+                    }
+                    String appName = pm.getApplicationLabel(appInfo).toString();
                     top3.add(new HourlyAppInfo(appName, mins));
                 } catch (Exception e) {
                     top3.add(new HourlyAppInfo(pkg, mins));
